@@ -3,6 +3,8 @@ package ute.nhom27.chatserver.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.Set;
+
 @Entity
 @Data
 @Table(name = "users")
