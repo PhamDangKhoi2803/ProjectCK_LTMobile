@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_messages"
+        android:icon="@android:drawable/ic_menu_send"
+        android:title="Tin nhắn" />
+    <item
+        android:id="@+id/nav_contacts"
+        android:icon="@drawable/ic_menu_friends"
+        android:title="Danh bạ" />
+    <item
+        android:id="@+id/nav_diary"
+        android:icon="@android:drawable/ic_menu_agenda"
+        android:title="Nhật ký" />
+    <item
+        android:id="@+id/nav_more"
+        android:icon="@android:drawable/ic_menu_more"
+        android:title="Thêm" />
+</menu>
