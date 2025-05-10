@@ -23,16 +23,20 @@ public class GroupMessage {
     @Column(nullable = false)
     private String content;
 
-    @Enumerated(EnumType.STRING)
-    private MessageStatus status = MessageStatus.SENT;
+    private String mediaUrl;
 
-    private LocalDateTime timestamp = LocalDateTime.now();
+    private String mediaType; // ví dụ: "image", "video", v.v.
 
-    private boolean isDeletedForUser = false; // Xóa tin nhắn chỉ ở phía người dùng
-    private boolean isRevoked = false; // Thu hồi tin nhắn (xóa cả nhóm)
+    @Column(nullable = false)
+    private String status = "SENT"; // Có thể là "SENT", "SEEN", v.v.
 
-    public enum MessageStatus {
-        SENT, // Đã gửi
-        SEEN // Đã đọc
-    }
+    @Column(nullable = false)
+    private String timestamp; // ISO 8601 string như trên Android
+
+    @Column(nullable = false)
+    private boolean isDeletedForUser = false;
+
+    @Column(nullable = false)
+    private boolean isRevoked = false;
+
 }

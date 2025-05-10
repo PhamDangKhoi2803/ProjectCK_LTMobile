@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data
 @Table(name = "chat_messages")
 public class ChatMessage {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,17 +24,15 @@ public class ChatMessage {
     @Column(nullable = false)
     private String content;
 
-    @Enumerated(EnumType.STRING)
-    private MessageStatus status = MessageStatus.SENT; // Mặc định là "ĐÃ GỬI"
+    private String mediaUrl;
+    private String mediaType;
+
+    @Column(nullable = false)
+    private String status = "SENT"; // SENT, DELIVERED, SEEN
 
     private LocalDateTime timestamp = LocalDateTime.now();
 
-    private boolean isDeletedBySender = false;  // Xóa tin nhắn chỉ ở phía người gửi
-    private boolean isDeletedByReceiver = false; // Xóa tin nhắn chỉ ở phía người nhận
-    private boolean isRevoked = false; // Thu hồi tin nhắn (xóa cả 2 phía)
-
-    public enum MessageStatus {
-        SENT, // Đã gửi
-        SEEN // Đã đọc
-    }
+    private boolean isDeletedBySender = false;
+    private boolean isDeletedByReceiver = false;
+    private boolean isRevoked = false;
 }

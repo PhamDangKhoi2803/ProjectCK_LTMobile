@@ -22,8 +22,19 @@ public class User {
     @Column(unique = true, nullable = false)
     private String phone;
 
+    @Column(nullable = false)
     private String password;
+
+    private String publicKey;
+
+    private String notificationToken;
+
+    private String themePreference;
+
+    @Transient // không lưu trong database (vì trạng thái online là tạm thời)
+    private boolean isOnline;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<Friendship> friendships;
+
 }

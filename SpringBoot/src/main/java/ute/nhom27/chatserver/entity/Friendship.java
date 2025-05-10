@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 @Table(name = "friendships")
 public class Friendship {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,12 +20,8 @@ public class Friendship {
     @JoinColumn(name = "friend_id", nullable = false)
     private User friend;
 
-    @Enumerated(EnumType.STRING)
-    private FriendshipStatus status = FriendshipStatus.PENDING;
+    @Column(nullable = false)
+    private String status = "PENDING"; // Giá trị: PENDING, ACCEPTED, BLOCKED
 
     private String nickname; // Biệt danh do người dùng đặt cho bạn bè
-
-    public enum FriendshipStatus {
-        PENDING, ACCEPTED, BLOCKED
-    }
 }

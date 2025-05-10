@@ -2,12 +2,15 @@ package ute.nhom27.chatserver.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.List;
 
 @Entity
 @Data
 @Table(name = "chat_groups")
 public class ChatGroup {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,8 +20,10 @@ public class ChatGroup {
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
+    @JsonIgnoreProperties("friendships") // để tránh vòng lặp nếu User có quan hệ ngược
     private User owner;
 
-    @OneToMany(mappedBy = "chatGroup", cascade = CascadeType.ALL)
-    private Set<GroupMember> members;
+    @OneToMany(mappedBy = "chatGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("chatGroup")
+    private List<GroupMember> members;
 }
