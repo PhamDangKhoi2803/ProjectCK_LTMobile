@@ -1,6 +1,7 @@
 package ute.nhom27.chatserver.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ute.nhom27.chatserver.entity.User;
 import ute.nhom27.chatserver.repository.UserRepository;
@@ -14,6 +15,8 @@ public class UserService implements IUserService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Optional<User> getUserById(Long id) {
@@ -32,6 +35,8 @@ public class UserService implements IUserService {
 
     @Override
     public User saveUser(User user) {
+        // Mã hóa mật khẩu trước khi lưu
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 

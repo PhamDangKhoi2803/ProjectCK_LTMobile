@@ -17,7 +17,7 @@ import ute.nhom27.android.model.User;
 
 public interface ApiService {
     @POST("auth/login")
-    Call<User> login(@Body LoginRequest request);
+    Call<LoginResponse> login(@Body LoginRequest request);
 
 //    @POST("auth/register")
 //    Call<User> register(@Body RegisterRequest request);

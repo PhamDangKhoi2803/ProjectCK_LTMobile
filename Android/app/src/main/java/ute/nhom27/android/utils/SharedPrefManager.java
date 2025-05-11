@@ -24,6 +24,16 @@ public class SharedPrefManager {
         editor.apply();
     }
 
+    public void saveToken(String token) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("jwtToken", token);
+        editor.apply();
+    }
+
+    public String getToken() {
+        return prefs.getString("jwtToken", null);
+    }
+
     public User getUser() {
         User user = new User();
         user.setId(prefs.getLong("userId", 0));

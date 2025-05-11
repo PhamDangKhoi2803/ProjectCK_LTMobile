@@ -1,21 +1,21 @@
 package ute.nhom27.android.api;
 
 public class LoginRequest {
-    private String username;
+    private String phoneOrEmail;
     private String password;
     // Getters, setters
 
     public LoginRequest(String username, String password) {
-        this.username = username;
+        this.phoneOrEmail = username;
         this.password = password;
     }
 
     public String getUsername() {
-        return username;
+        return phoneOrEmail;
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        this.phoneOrEmail = username;
     }
 
     public String getPassword() {
