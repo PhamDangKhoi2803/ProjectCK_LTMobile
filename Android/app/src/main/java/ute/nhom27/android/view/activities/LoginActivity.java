@@ -32,6 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextView tvForgotPassword;
     private SharedPrefManager sharedPrefManager;
     private ApiService apiService;
+    private TextView textViewRegister;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,7 @@ public class LoginActivity extends AppCompatActivity {
         etPassword = findViewById(R.id.editTextPassword);
         btnLogin = findViewById(R.id.buttonLogin);
         tvForgotPassword = findViewById(R.id.textViewForgotPassword);
+        textViewRegister = findViewById(R.id.textViewRegister);
 
         // Khởi tạo SharedPreferences và Retrofit
         sharedPrefManager = new SharedPrefManager(this);
@@ -62,6 +64,10 @@ public class LoginActivity extends AppCompatActivity {
         // Xử lý sự kiện "Quên mật khẩu"
         tvForgotPassword.setOnClickListener(v -> {
             Toast.makeText(LoginActivity.this, "Forgot Password feature is not implemented yet", Toast.LENGTH_SHORT).show();
+        });
+        textViewRegister.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegisterActivity.class);
+            startActivity(intent);
         });
     }
 

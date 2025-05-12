@@ -29,6 +29,16 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    @Override
+    public Optional<User> getUserByPhone(String phone) {
+        return userRepository.findByPhone(phone);
+    }
+
+    @Override
     public List<User> searchUsers(String keyword) {
         return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrPhoneContainingIgnoreCase(keyword, keyword, keyword);
     }
@@ -45,5 +55,10 @@ public class UserService implements IUserService {
         return userRepository.existsByUsername(username)
                 || userRepository.existsByEmail(email)
                 || userRepository.existsByPhone(phone);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 }

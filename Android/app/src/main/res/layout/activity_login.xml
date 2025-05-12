@@ -86,7 +86,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/buttonLogin" />
 
+    <!-- TextView "Bạn quên mật khẩu ư?" -->
+
     <!-- TextView "Meta" ở dưới cùng -->
+
+    <TextView
+        android:id="@+id/textViewRegister"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Bạn chưa có tài khoản? Đăng ký ngay"
+        android:textColor="#B0BEC5"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/textViewMeta"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/buttonLogin"
+        app:layout_constraintVertical_bias="0.221" />
+
     <TextView
         android:id="@+id/textViewMeta"
         android:layout_width="wrap_content"

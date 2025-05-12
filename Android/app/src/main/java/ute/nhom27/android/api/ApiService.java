@@ -19,8 +19,8 @@ public interface ApiService {
     @POST("auth/login")
     Call<LoginResponse> login(@Body LoginRequest request);
 
-//    @POST("auth/register")
-//    Call<User> register(@Body RegisterRequest request);
+    @POST("auth/register")
+    Call<LoginResponse> register(@Body RegisterRequest request);
 
     @GET("users/{userId}/messages")
     Call<List<ChatMessage>> getMessages(@Path("userId") Long userId);
