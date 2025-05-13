@@ -21,7 +21,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByPhoneOrEmail(phoneOrEmail, phoneOrEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with phone or email: " + phoneOrEmail));
         return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
+                //user.getUsername(),
+                phoneOrEmail,
                 user.getPassword(),
                 new ArrayList<>() // Danh sách quyền, để trống vì chưa cần phân quyền
         );

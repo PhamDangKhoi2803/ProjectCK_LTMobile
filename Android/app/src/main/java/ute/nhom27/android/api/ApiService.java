@@ -5,7 +5,9 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import ute.nhom27.android.model.AISuggestion;
 import ute.nhom27.android.model.ChatGroup;
@@ -22,6 +24,8 @@ public interface ApiService {
     @POST("auth/register")
     Call<LoginResponse> register(@Body RegisterRequest request);
 
+    @PUT("auth/update-theme")
+    Call<User> updateTheme(@Body ThemeUpdateRequest request, @Header("Authorization") String token);
     @GET("users/{userId}/messages")
     Call<List<ChatMessage>> getMessages(@Path("userId") Long userId);
 
