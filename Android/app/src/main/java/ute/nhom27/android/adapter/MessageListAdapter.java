@@ -49,13 +49,19 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
         MessageListResponse friend = friendList.get(position);
         holder.chatName.setText(friend.getFriendName());
         holder.lastMessage.setText(friend.getLastMessage());
-        holder.time.setText(friend.getTimestamp());
-        holder.status.setText(friend.getIsSeen() ? "Đã xem" : "Đã nhận");
+        holder.time.setText(friend.getTimestamp() != null ? friend.getTimestamp() : "Chưa có thời gian");
+        holder.status.setText(Boolean.TRUE.equals(friend.getIsSeen()) ? "Đã xem" : "Đã nhận");
 
-        Glide.with(context)
-                .load(friend.getAvatarUrl())
-                .placeholder(R.drawable.default_avatar)
-                .into(holder.avatar);
+        if (friend.getAvatarUrl() != null) {
+            Glide.with(context)
+                    .load(friend.getAvatarUrl())
+                    .placeholder(R.drawable.default_avatar)
+                    .into(holder.avatar);
+        } else {
+            Glide.with(context)
+                    .load(R.drawable.default_avatar)
+                    .into(holder.avatar);
+        }
     }
 
     @Override
