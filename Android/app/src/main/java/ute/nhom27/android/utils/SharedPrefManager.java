@@ -47,7 +47,15 @@ public class SharedPrefManager {
     public boolean isLoggedIn() {
         return prefs.getLong("userId", 0) != 0;
     }
+    public void saveThemePreference(String themePreference) {
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("themePreference", themePreference);
+        editor.apply();
+    }
 
+    public String getThemePreference() {
+        return prefs.getString("themePreference", "light");
+    }
     public void clear() {
         SharedPreferences.Editor editor = prefs.edit();
         editor.clear();

@@ -17,6 +17,7 @@ import java.io.IOException;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ute.nhom27.android.BaseActivity;
 import ute.nhom27.android.R;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
@@ -26,7 +27,7 @@ import ute.nhom27.android.model.User;
 import ute.nhom27.android.utils.SharedPrefManager;
 import ute.nhom27.android.view.MainActivity;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
     private EditText etPhoneOrEmail, etPassword;
     private Button btnLogin;
     private TextView tvForgotPassword;

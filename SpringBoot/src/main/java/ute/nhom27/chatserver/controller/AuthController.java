@@ -6,18 +6,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
-import ute.nhom27.chatserver.dto.LoginRequest;
-import ute.nhom27.chatserver.dto.LoginResponse;
-import ute.nhom27.chatserver.dto.RegisterRequest;
-import ute.nhom27.chatserver.dto.UserDTO;
+import ute.nhom27.chatserver.dto.*;
 import ute.nhom27.chatserver.entity.User;
+import ute.nhom27.chatserver.repository.UserRepository;
 import ute.nhom27.chatserver.service.impl.UserDetailsServiceImpl;
 import ute.nhom27.chatserver.service.impl.UserService;
 import ute.nhom27.chatserver.util.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/auth")
@@ -37,42 +39,34 @@ public class AuthController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        logger.info("Login attempt with phoneOrEmail: {}", loginRequest.getPhoneOrEmail());
+        logger.info("Login attempt for user: {}", loginRequest.getPhoneOrEmail());
         try {
-            if (loginRequest.getPhoneOrEmail() == null || loginRequest.getPassword() == null) {
-                logger.error("Invalid request: phoneOrEmail or password is null");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("{\"error\": \"phoneOrEmail and password are required\"}");
-            }
-
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getPhoneOrEmail(),
-                            loginRequest.getPassword()
-                    )
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getPhoneOrEmail(), loginRequest.getPassword())
             );
-            logger.info("Authentication successful for phoneOrEmail: {}", loginRequest.getPhoneOrEmail());
-
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getPhoneOrEmail());
-            final String jwt = jwtUtil.generateToken(userDetails.getUsername());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
             User user = userDetailsService.getUserByPhoneOrEmail(loginRequest.getPhoneOrEmail());
             if (user == null) {
-                logger.error("User not found after authentication for phoneOrEmail: {}", loginRequest.getPhoneOrEmail());
+                logger.error("User not found: {}", loginRequest.getPhoneOrEmail());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("{\"error\": \"User not found\"}");
             }
 
             UserDTO userDTO = userService.convertToDTO(user);
 
-            logger.info("Login successful for user: {}", user.getUsername());
-            return ResponseEntity.ok(new LoginResponse(userDTO, jwt));
+            LoginResponse loginResponse = new LoginResponse(userDTO, jwt);
+            logger.info("User logged in: {}", user.getUsername());
+            return ResponseEntity.ok(loginResponse);
         } catch (Exception e) {
             logger.error("Login error for phoneOrEmail: {}, error: {}", loginRequest.getPhoneOrEmail(), e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"Login failed: " + e.getMessage() + "\"}");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("{\"error\": \"Invalid credentials: " + e.getMessage() + "\"}");
         }
     }
 
@@ -123,7 +117,8 @@ public class AuthController {
 
             // Tạo JWT token
             final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getPhone());
-            final String jwt = jwtUtil.generateToken(userDetails.getUsername());
+            //final String jwt = jwtUtil.generateToken(userDetails.getUsername());
+            final String jwt = jwtUtil.generateToken(user.getPhone());
 
             // Tạo UserDTO
             UserDTO userDTO = userService.convertToDTO(user);
@@ -134,6 +129,54 @@ public class AuthController {
             logger.error("Registration error for username: {}, error: {}", registerRequest.getUsername(), e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("{\"error\": \"Registration failed: " + e.getMessage() + "\"}");
+        }
+    }
+
+    @PutMapping("/update-theme")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateTheme(@RequestBody ThemeUpdateRequest themeUpdateRequest, Authentication authentication) {
+        logger.info("Update theme attempt");
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                logger.error("Authentication is null or not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("{\"error\": \"Unauthorized: No valid authentication provided\"}");
+            }
+
+            String phone = authentication.getName(); // Lấy phone từ token
+            logger.info("Update theme for phone: {}", phone);
+
+            User user = userRepository.findByPhoneOrEmail(phone, phone).orElse(null);
+            if (user == null) {
+                logger.error("User not found with phone: {}", phone);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("{\"error\": \"User not found\"}");
+            }
+
+            if (themeUpdateRequest.getThemePreference() == null || themeUpdateRequest.getThemePreference().isEmpty()) {
+                logger.error("Invalid theme preference");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("{\"error\": \"Theme preference is required\"}");
+            }
+
+            user.setThemePreference(themeUpdateRequest.getThemePreference());
+            userService.saveUser(user);
+
+            UserDTO userDTO = new UserDTO();
+            userDTO.setId(user.getId());
+            userDTO.setUsername(user.getUsername());
+            userDTO.setEmail(user.getEmail());
+            userDTO.setPhone(user.getPhone());
+            userDTO.setPublicKey(user.getPublicKey() != null ? user.getPublicKey() : "");
+            userDTO.setNotificationToken(user.getNotificationToken() != null ? user.getNotificationToken() : "");
+            userDTO.setThemePreference(user.getThemePreference() != null ? user.getThemePreference() : "light");
+
+            logger.info("Theme updated for user: {}", user.getUsername());
+            return ResponseEntity.ok(userDTO);
+        } catch (Exception e) {
+            logger.error("Theme update error: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Theme update failed: " + e.getMessage() + "\"}");
         }
     }
 }

@@ -1,6 +1,10 @@
 package ute.nhom27.android.view;
 
+import android.content.ClipData;
+import android.content.Intent;
 import android.os.Bundle;
+
+import android.widget.Button;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -16,13 +20,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 
+import ute.nhom27.android.BaseActivity;
 import ute.nhom27.android.R;
+import ute.nhom27.android.SettingsActivity;
 import ute.nhom27.android.view.fragment.FriendListFragment;
 import ute.nhom27.android.view.fragment.MessageListFragment;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private BottomNavigationView bottomNavigationView;
 
@@ -30,10 +37,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+            return insets;
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-
-        // Mặc định hiển thị MessageListFragment
+        // M?c d?nh hi?n th? MessageListFragment
         if (savedInstanceState == null) {
             loadFragment(new MessageListFragment());
         }
@@ -42,12 +48,17 @@ public class MainActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
 
+			if (itemId == R.id.nav_settings) {
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            }
             if (itemId == R.id.nav_messages) {
                 selectedFragment = new MessageListFragment();
             } else if (itemId == R.id.nav_contacts) {
                 selectedFragment = new FriendListFragment();
             }
-            // Các mục khác có thể được xử lý tại đây
+            // C�c m?c kh�c c� th? du?c x? l� t?i d�y
 
             if (selectedFragment != null) {
                 loadFragment(selectedFragment);
@@ -56,11 +67,12 @@ public class MainActivity extends AppCompatActivity {
 
             return false;
         });
+
     }
 
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, fragment); // fragment_container là FrameLayout trong activity_main.xml
+        transaction.replace(R.id.fragment_container, fragment); // fragment_container l� FrameLayout trong activity_main.xml
         transaction.commit();
     }
 }
