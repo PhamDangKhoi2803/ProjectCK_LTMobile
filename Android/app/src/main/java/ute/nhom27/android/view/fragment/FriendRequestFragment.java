@@ -23,13 +23,14 @@ import ute.nhom27.android.adapter.FriendRequestAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.response.UserResponse;  // giả sử dữ liệu trả về là kiểu UserResponse
+import ute.nhom27.android.utils.SharedPrefManager;
 
 public class FriendRequestFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private FriendRequestAdapter adapter;
     private ApiService apiService;
-    private Long userId = 1L; // Lấy userId từ SharedPreferences hoặc từ login
+
 
     public FriendRequestFragment() {
         // Required empty public constructor
@@ -54,6 +55,9 @@ public class FriendRequestFragment extends Fragment {
     }
 
     private void fetchFriendRequests() {
+        SharedPrefManager sharedPrefManager = new SharedPrefManager(requireContext());
+        // Cập nhật userId theo người dùng đăng nhập
+        Long userId = sharedPrefManager.getUser().getId();
         // Giả sử ApiService có phương thức getFriendRequests(userId)
         apiService.getFriendRequests(userId).enqueue(new Callback<List<UserResponse>>() {
             @Override

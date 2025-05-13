@@ -2,6 +2,7 @@ package ute.nhom27.android.api;
 
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -9,6 +10,7 @@ import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 import ute.nhom27.android.model.AISuggestion;
 import ute.nhom27.android.model.ChatGroup;
 import ute.nhom27.android.model.ChatMessage;
@@ -51,6 +53,18 @@ public interface ApiService {
 
     @GET("api/friends/{userId}/list-request")
     Call<List<UserResponse>> getFriendRequests(@Path("userId") Long userId);
+
+    @POST("api/friends/accept")
+    Call<ResponseBody> acceptFriendRequest(
+            @Query("receiverId") Long receiverId,
+            @Query("senderId") Long senderId
+    );
+
+    @POST("api/friends/reject")
+    Call<ResponseBody> rejectFriendRequest(
+            @Query("receiverId") Long receiverId,
+            @Query("senderId") Long senderId
+    );
 
     @POST("friends")
     Call<Friendship> addFriend(@Body Friendship friendship);

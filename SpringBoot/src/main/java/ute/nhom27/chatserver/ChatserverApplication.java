@@ -4,28 +4,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import ute.nhom27.chatserver.entity.User;
 import ute.nhom27.chatserver.service.impl.UserService;
 
 @SpringBootApplication
-public class ChatserverApplication implements CommandLineRunner {
+public class ChatserverApplication{
 
     @Autowired
     private UserService userService;
 
     public static void main(String[] args) {
-        SpringApplication.run(ChatserverApplication.class, args);
-    }
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        String encodedPassword = "$2a$10$oyIrgmrCkFpvo/C6s5386OQFz5Fw3P/TCd9fr5g0HVDFDtz3ZyGIy";
 
-    @Override
-    public void run(String... args) throws Exception {
-        // Tạo người dùng thử nghiệm
-//        User user = new User();
-//        user.setUsername("testuser2");
-//        user.setEmail("khoi@gmail.com");
-//        user.setPhone("0123456789");
-//        user.setPassword("123123"); // Sẽ được mã hóa
-//        user.setThemePreference("light");
-//        userService.saveUser(user);
+        boolean matches = encoder.matches("123456", encodedPassword);
+        System.out.println("Password khớp? " + matches);
     }
 }

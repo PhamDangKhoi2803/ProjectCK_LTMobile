@@ -71,7 +71,7 @@ public class MainActivity extends BaseActivity {
 
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, fragment); // fragment_container l� FrameLayout trong activity_main.xml
+        transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
     }
 }

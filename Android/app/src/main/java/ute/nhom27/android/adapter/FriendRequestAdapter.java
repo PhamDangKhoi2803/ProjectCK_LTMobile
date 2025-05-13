@@ -1,23 +1,34 @@
 package ute.nhom27.android.adapter;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.List;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import ute.nhom27.android.R;
+import ute.nhom27.android.api.ApiClient;
+import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.response.UserResponse;
+import ute.nhom27.android.utils.SharedPrefManager;
 
 public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdapter.RequestViewHolder> {
 
     private List<UserResponse> requestList;
-    private Context context;
+    public  Context context;
     private OnItemActionListener listener;
 
     public interface OnItemActionListener {
@@ -76,17 +87,50 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
             }
             itemView.setOnClickListener(v -> listener.onItemClick(user));
 
-            // Xử lý nút chấp nhận và từ chối nếu layout có:
-            if (acceptButton != null && rejectButton != null) {
-                acceptButton.setOnClickListener(v -> {
-                    // TODO: Thực hiện gọi API chấp nhận lời mời cho user này
-                    listener.onItemClick(user);
+            acceptButton.setOnClickListener(v -> {
+                SharedPrefManager sharedPrefManager = new SharedPrefManager(v.getContext());
+                Long currentUserId = sharedPrefManager.getUser().getId();
+                Long senderId = user.getId();    // ID người gửi lời mời
+
+                ApiService apiService = ApiClient.getAuthClient(v.getContext()).create(ApiService.class);
+                apiService.acceptFriendRequest(currentUserId, senderId).enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(itemView.getContext(), "Đã chấp nhận", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(itemView.getContext(), "Lỗi khi chấp nhận", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Toast.makeText(itemView.getContext(), "Lỗi mạng", Toast.LENGTH_SHORT).show();
+                    }
                 });
-                acceptButton.setOnClickListener(v -> {
-                    // TODO: Thực hiện gọi API từ chối lời mời cho user này
-                    listener.onItemClick(user);
+            });
+            rejectButton.setOnClickListener(v -> {
+                SharedPrefManager sharedPrefManager = new SharedPrefManager(v.getContext());
+                Long currentUserId = sharedPrefManager.getUser().getId();
+                Long senderId = user.getId();
+
+                ApiService apiService = ApiClient.getAuthClient(v.getContext()).create(ApiService.class);
+                apiService.rejectFriendRequest(currentUserId, senderId).enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(itemView.getContext(), "Đã từ chối", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(itemView.getContext(), "Lỗi khi từ chối", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Toast.makeText(itemView.getContext(), "Lỗi mạng", Toast.LENGTH_SHORT).show();
+                    }
                 });
-            }
+            });
         }
     }
 }

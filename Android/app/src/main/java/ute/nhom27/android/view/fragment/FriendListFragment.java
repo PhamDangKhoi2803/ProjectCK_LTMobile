@@ -60,7 +60,6 @@ public class FriendListFragment extends Fragment {
         SharedPrefManager sharedPrefManager = new SharedPrefManager(requireContext());
         // Cập nhật userId theo người dùng đăng nhập
         Long userId = sharedPrefManager.getUser().getId();
-        Log.d("TOKEN", "JWT = " + new SharedPrefManager(requireContext()).getToken());
         apiService.getFriends(userId).enqueue(new Callback<List<UserResponse>>() {
             @Override
             public void onResponse(Call<List<UserResponse>> call, Response<List<UserResponse>> response) {
