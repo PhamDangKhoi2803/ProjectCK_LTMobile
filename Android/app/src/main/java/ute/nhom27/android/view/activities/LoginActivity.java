@@ -48,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
 
         // Khởi tạo SharedPreferences và Retrofit
         sharedPrefManager = new SharedPrefManager(this);
-        apiService = ApiClient.getClient().create(ApiService.class);
+        apiService = ApiClient.getNoAuthClient().create(ApiService.class);
 
         // Kiểm tra xem người dùng đã đăng nhập chưa
         if (sharedPrefManager.isLoggedIn()) {

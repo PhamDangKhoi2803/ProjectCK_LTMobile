@@ -2,12 +2,15 @@ package ute.nhom27.chatserver.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ute.nhom27.chatserver.dto.UserDTO;
 import ute.nhom27.chatserver.entity.Friendship;
 import ute.nhom27.chatserver.entity.User;
 import ute.nhom27.chatserver.repository.FriendshipRepository;
 import ute.nhom27.chatserver.repository.UserRepository;
 import ute.nhom27.chatserver.service.IFriendshipService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -18,6 +21,9 @@ public class FriendshipService implements IFriendshipService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Override
     public boolean sendFriendRequest(Long senderId, Long receiverId) {
@@ -72,5 +78,18 @@ public class FriendshipService implements IFriendshipService {
     public boolean areFriends(Long userId1, Long userId2) {
         Optional<Friendship> friendship = friendshipRepository.findByUserIdAndFriendId(userId1, userId2);
         return friendship.isPresent() && "ACCEPTED".equals(friendship.get().getStatus());
+    }
+
+    @Override
+    public List<UserDTO> getFriends(Long userId) {
+        List<Friendship> friendships = friendshipRepository.findAcceptedFriendships(userId);
+        List<UserDTO> friends = new ArrayList<>();
+
+        for (Friendship f : friendships) {
+            User friend = f.getUser().getId().equals(userId) ? f.getFriend() : f.getUser();
+            friends.add(userService.convertToDTO(friend));
+        }
+
+        return friends;
     }
 }

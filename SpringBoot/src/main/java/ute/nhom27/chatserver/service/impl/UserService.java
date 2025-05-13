@@ -3,6 +3,7 @@ package ute.nhom27.chatserver.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import ute.nhom27.chatserver.dto.UserDTO;
 import ute.nhom27.chatserver.entity.User;
 import ute.nhom27.chatserver.repository.UserRepository;
 import ute.nhom27.chatserver.service.IUserService;
@@ -60,5 +61,19 @@ public class UserService implements IUserService {
     @Override
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public UserDTO convertToDTO(User user) {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setUsername(user.getUsername());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setPhone(user.getPhone());
+        userDTO.setPublicKey(user.getPublicKey() != null ? user.getPublicKey() : "");
+        userDTO.setNotificationToken(user.getNotificationToken() != null ? user.getNotificationToken() : "");
+        userDTO.setAvatarURL(user.getAvatarUrl() != null ? user.getAvatarUrl() : "");
+        userDTO.setThemePreference(user.getThemePreference() != null ? user.getThemePreference() : "light");
+        return userDTO;
     }
 }

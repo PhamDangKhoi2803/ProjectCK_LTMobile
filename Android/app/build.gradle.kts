@@ -29,6 +29,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    buildToolsVersion = "35.0.0"
 }
 
 dependencies {
@@ -50,4 +51,9 @@ dependencies {
     annotationProcessor ("androidx.room:room-compiler:2.6.1")
 
     implementation ("com.google.code.gson:gson:2.10.1")
+
+    // Glide (Thêm vào đây)
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+    implementation("com.squareup.picasso:picasso:2.4.0")
 }

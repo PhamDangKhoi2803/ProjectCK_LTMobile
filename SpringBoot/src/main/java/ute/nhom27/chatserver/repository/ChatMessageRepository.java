@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import ute.nhom27.chatserver.entity.ChatMessage;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
@@ -19,4 +20,10 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             @Param("user1Id") Long user1Id,
             @Param("user2Id") Long user2Id
     );
+
+    @Query("SELECT m FROM ChatMessage m WHERE " +
+            "(m.sender.id = :userId1 AND m.receiver.id = :userId2) OR " +
+            "(m.sender.id = :userId2 AND m.receiver.id = :userId1) " +
+            "ORDER BY m.timestamp DESC")
+    ChatMessage findTopByUsersOrderByTimestampDesc(Long userId1, Long userId2);
 }

@@ -13,7 +13,8 @@ import ute.nhom27.android.model.ChatMessage;
 import ute.nhom27.android.model.Friendship;
 import ute.nhom27.android.model.GroupMessage;
 import ute.nhom27.android.model.TypingStatus;
-import ute.nhom27.android.model.User;
+import ute.nhom27.android.model.response.MessageListResponse;
+import ute.nhom27.android.model.response.UserResponse;
 
 public interface ApiService {
     @POST("auth/login")
@@ -37,8 +38,13 @@ public interface ApiService {
     @POST("group-messages")
     Call<GroupMessage> sendGroupMessage(@Body GroupMessage message);
 
+    @GET("api/messages/friends/{userId}")
+    Call<List<MessageListResponse>> getFriendLastMessages(@Path("userId") Long userId);
+
     @GET("friends/{userId}")
     Call<List<Friendship>> getFriendships(@Path("userId") Long userId);
+    @GET("api/friends/{userId}/list")
+    Call<List<UserResponse>> getFriends(@Path("userId") Long userId);
 
     @POST("friends")
     Call<Friendship> addFriend(@Body Friendship friendship);

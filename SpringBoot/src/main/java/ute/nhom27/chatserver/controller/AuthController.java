@@ -65,14 +65,7 @@ public class AuthController {
                         .body("{\"error\": \"User not found\"}");
             }
 
-            UserDTO userDTO = new UserDTO();
-            userDTO.setId(user.getId());
-            userDTO.setUsername(user.getUsername());
-            userDTO.setEmail(user.getEmail());
-            userDTO.setPhone(user.getPhone());
-            userDTO.setPublicKey(user.getPublicKey() != null ? user.getPublicKey() : "");
-            userDTO.setNotificationToken(user.getNotificationToken() != null ? user.getNotificationToken() : "");
-            userDTO.setThemePreference(user.getThemePreference() != null ? user.getThemePreference() : "light");
+            UserDTO userDTO = userService.convertToDTO(user);
 
             logger.info("Login successful for user: {}", user.getUsername());
             return ResponseEntity.ok(new LoginResponse(userDTO, jwt));
@@ -122,6 +115,7 @@ public class AuthController {
             user.setPassword(registerRequest.getPassword()); // Sẽ được mã hóa trong saveUser
             user.setPublicKey(registerRequest.getPublicKey());
             user.setNotificationToken(registerRequest.getNotificationToken());
+
             user.setThemePreference(registerRequest.getThemePreference() != null ? registerRequest.getThemePreference() : "light");
 
             // Lưu người dùng
@@ -132,14 +126,7 @@ public class AuthController {
             final String jwt = jwtUtil.generateToken(userDetails.getUsername());
 
             // Tạo UserDTO
-            UserDTO userDTO = new UserDTO();
-            userDTO.setId(user.getId());
-            userDTO.setUsername(user.getUsername());
-            userDTO.setEmail(user.getEmail());
-            userDTO.setPhone(user.getPhone());
-            userDTO.setPublicKey(user.getPublicKey() != null ? user.getPublicKey() : "");
-            userDTO.setNotificationToken(user.getNotificationToken() != null ? user.getNotificationToken() : "");
-            userDTO.setThemePreference(user.getThemePreference() != null ? user.getThemePreference() : "light");
+            UserDTO userDTO = userService.convertToDTO(user);
 
             logger.info("Registration successful for user: {}", user.getUsername());
             return ResponseEntity.ok(new LoginResponse(userDTO, jwt));

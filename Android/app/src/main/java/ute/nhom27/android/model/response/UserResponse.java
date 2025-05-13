@@ -1,19 +1,15 @@
-package ute.nhom27.android.model;
+package ute.nhom27.android.model.response;
 
-public class User {
+public class UserResponse {
     private Long id;
     private String username;
     private String email;
     private String phone;
-    private String password;
     private String publicKey;
     private String notificationToken;
-    private String avatarURL;
     private String themePreference;
-    private boolean isOnline; // Lấy từ WebSocket hoặc Redis
-
-    public User() {
-    }
+    private boolean isOnline;
+    private String avatarURL;
 
     public Long getId() {
         return id;
@@ -47,14 +43,6 @@ public class User {
         this.phone = phone;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public String getPublicKey() {
         return publicKey;
     }
@@ -71,14 +59,6 @@ public class User {
         this.notificationToken = notificationToken;
     }
 
-    public String getAvatarURL() {
-        return avatarURL;
-    }
-
-    public void setAvatarURL(String avatarURL) {
-        this.avatarURL = avatarURL;
-    }
-
     public String getThemePreference() {
         return themePreference;
     }
@@ -93,5 +73,13 @@ public class User {
 
     public void setOnline(boolean online) {
         isOnline = online;
+    }
+
+    public String getAvatarURL() {
+        return avatarURL;
+    }
+
+    public void setAvatarURL(String avatarURL) {
+        this.avatarURL = avatarURL;
     }
 }

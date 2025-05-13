@@ -1,70 +1,70 @@
-<?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="72dp"
     android:padding="8dp">
 
-    <!-- Ảnh đại diện -->
+    <!-- Avatar người dùng -->
     <ImageView
         android:id="@+id/avatar"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:scaleType="centerCrop"
         android:src="@drawable/default_avatar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:background="@drawable/avatar_circle_background"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- Tên nhóm/người dùng -->
+    <!-- Tên người dùng -->
     <TextView
         android:id="@+id/chat_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="8dp"
-        android:text="Tên nhóm/người dùng"
-        android:textColor="#000000"
+        android:text="Tên người dùng"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@id/time"
+        android:textColor="#000"
+        app:layout_constraintTop_toTopOf="@id/avatar"
         app:layout_constraintStart_toEndOf="@id/avatar"
-        app:layout_constraintTop_toTopOf="@id/avatar" />
+        app:layout_constraintEnd_toStartOf="@id/time"
+        android:layout_marginStart="12dp" />
 
-    <!-- Thời gian tin nhắn -->
+    <!-- Thời gian tin nhắn cuối -->
     <TextView
         android:id="@+id/time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="12/03"
-        android:textColor="#B0B0B0"
+        android:text="13:45"
         android:textSize="12sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/chat_name" />
+        android:textColor="#888"
+        app:layout_constraintTop_toTopOf="@id/chat_name"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Tin nhắn gần nhất -->
+    <!-- Tin nhắn cuối cùng -->
     <TextView
         android:id="@+id/last_message"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:text="Tin nhắn gần nhất..."
-        android:textColor="#B0B0B0"
         android:textSize="14sp"
-        app:layout_constraintEnd_toStartOf="@id/unread_count"
+        android:textColor="#666"
+        android:maxLines="1"
+        android:ellipsize="end"
+        app:layout_constraintTop_toBottomOf="@id/chat_name"
         app:layout_constraintStart_toStartOf="@id/chat_name"
-        app:layout_constraintTop_toBottomOf="@id/chat_name" />
+        app:layout_constraintEnd_toStartOf="@id/message_status"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
-    <!-- Số tin nhắn chưa đọc -->
+    <!-- Trạng thái tin nhắn -->
     <TextView
-        android:id="@+id/unread_count"
+        android:id="@+id/message_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/unread_count_background"
-        android:gravity="center"
-        android:padding="4dp"
-        android:text="2"
-        android:textColor="#FFFFFF"
+        android:text="Đã xem"
         android:textSize="12sp"
-        android:visibility="gone"
+        android:textColor="#4CAF50"
         app:layout_constraintBottom_toBottomOf="@id/last_message"
         app:layout_constraintEnd_toEndOf="parent" />
 

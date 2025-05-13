@@ -7,6 +7,7 @@ public class UserDTO {
     private String phone;
     private String publicKey;
     private String notificationToken;
+    private String avatarURL;
     private String themePreference;
     private boolean isOnline;
 
@@ -56,6 +57,14 @@ public class UserDTO {
 
     public void setNotificationToken(String notificationToken) {
         this.notificationToken = notificationToken;
+    }
+
+    public String getAvatarURL() {
+        return avatarURL;
+    }
+
+    public void setAvatarURL(String avatarURL) {
+        this.avatarURL = avatarURL;
     }
 
     public String getThemePreference() {

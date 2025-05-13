@@ -47,7 +47,7 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegister = findViewById(R.id.btnRegister);
         tvLogin = findViewById(R.id.tvLogin);
 
-        apiService = ApiClient.getClient().create(ApiService.class);
+        apiService = ApiClient.getNoAuthClient().create(ApiService.class);
         sharedPrefManager = new SharedPrefManager(this);
 
         // Thiết lập Spinner cho themePreference

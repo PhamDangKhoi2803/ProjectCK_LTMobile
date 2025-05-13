@@ -29,6 +29,8 @@ public class User {
 
     private String notificationToken;
 
+    private String avatarUrl;
+
     private String themePreference;
 
     @Transient // không lưu trong database (vì trạng thái online là tạm thời)
@@ -91,6 +93,14 @@ public class User {
 
     public void setNotificationToken(String notificationToken) {
         this.notificationToken = notificationToken;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public String getThemePreference() {

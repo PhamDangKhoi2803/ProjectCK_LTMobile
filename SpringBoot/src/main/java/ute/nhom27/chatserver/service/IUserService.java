@@ -1,5 +1,6 @@
 package ute.nhom27.chatserver.service;
 
+import ute.nhom27.chatserver.dto.UserDTO;
 import ute.nhom27.chatserver.entity.User;
 
 import java.util.List;
@@ -14,4 +15,6 @@ public interface IUserService {
     User saveUser(User user);
     boolean existsByUsernameOrEmailOrPhone(String username, String email, String phone);
     void deleteUser(Long id);
+
+    UserDTO convertToDTO(User user);
 }

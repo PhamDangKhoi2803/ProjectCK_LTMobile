@@ -3,8 +3,11 @@ package ute.nhom27.chatserver.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ute.nhom27.chatserver.dto.UserDTO;
 import ute.nhom27.chatserver.service.IFriendshipService;
 import ute.nhom27.chatserver.service.IUserService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/friends")
@@ -56,5 +59,11 @@ public class FriendshipController {
             return ResponseEntity.badRequest().body("Không tìm thấy lời mời kết bạn hoặc đã xử lý rồi");
         }
         return ResponseEntity.ok("Đã từ chối lời mời kết bạn");
+    }
+
+    @GetMapping("/{userId}/list")
+    public ResponseEntity<?> getFriends(@PathVariable Long userId) {
+        List<UserDTO> friends = friendshipService.getFriends(userId);
+        return ResponseEntity.ok(friends);
     }
 }
