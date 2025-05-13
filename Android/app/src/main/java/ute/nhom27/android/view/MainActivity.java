@@ -28,9 +28,11 @@ import ute.nhom27.android.SettingsActivity;
 import ute.nhom27.android.view.fragment.FriendContainerFragment;
 import ute.nhom27.android.view.fragment.FriendListFragment;
 import ute.nhom27.android.view.fragment.MessageListFragment;
+import ute.nhom27.android.view.fragment.SettingsFragment;
+import ute.nhom27.android.view.fragment.ThemeChange;
 
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements ThemeChange{
 
     private BottomNavigationView bottomNavigationView;
 
@@ -48,10 +50,13 @@ public class MainActivity extends BaseActivity {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
 
-			if (itemId == R.id.nav_settings) {
-                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-                startActivity(intent);
-                return true;
+//			if (itemId == R.id.nav_settings) {
+//                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+//                startActivity(intent);
+//                return true;
+//            }
+            if (itemId == R.id.nav_settings) {
+                selectedFragment = new SettingsFragment();
             }
             if (itemId == R.id.nav_messages) {
                 selectedFragment = new MessageListFragment();
@@ -61,6 +66,9 @@ public class MainActivity extends BaseActivity {
 
             if (selectedFragment != null) {
                 loadFragment(selectedFragment);
+                if (itemId == R.id.nav_settings) {
+                    onThemeChange();
+                }
                 return true;
             }
 
@@ -73,5 +81,10 @@ public class MainActivity extends BaseActivity {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.fragment_container, fragment);
         transaction.commit();
+    }
+
+    @Override
+    public void onThemeChange() {
+        applyTheme();
     }
 }

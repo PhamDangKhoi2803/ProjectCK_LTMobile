@@ -15,7 +15,6 @@ public class BaseActivity extends AppCompatActivity {
         applyTheme();
         super.onCreate(savedInstanceState);
     }
-
     protected void applyTheme() {
         String themePreference = sharedPrefManager.getThemePreference();
         if ("dark".equals(themePreference)) {
