@@ -13,4 +13,6 @@ public interface IFriendshipService {
     boolean areFriends(Long userId1, Long userId2);
 
     List<UserDTO> getFriends(Long userId);
+
+    List<UserDTO> getFriendRequests(Long userId);
 }

@@ -55,11 +55,14 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Us
     static class UserViewHolder extends RecyclerView.ViewHolder {
         ImageView avatarImage;
         TextView nameText;
+        View acceptButton, rejectButton;
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             avatarImage = itemView.findViewById(R.id.avatar);
             nameText = itemView.findViewById(R.id.user_name);
+            acceptButton = itemView.findViewById(R.id.btn_accept);
+            rejectButton = itemView.findViewById(R.id.btn_reject);
         }
 
         public void bind(UserResponse user, OnItemClickListener listener) {
@@ -75,6 +78,9 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Us
             } else {
                 avatarImage.setImageResource(R.drawable.default_avatar);
             }
+
+            if (acceptButton != null) acceptButton.setVisibility(View.GONE);
+            if (rejectButton != null) rejectButton.setVisibility(View.GONE);
 
             itemView.setOnClickListener(v -> listener.onItemClick(user));
         }

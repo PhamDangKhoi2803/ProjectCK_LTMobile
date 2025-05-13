@@ -66,4 +66,10 @@ public class FriendshipController {
         List<UserDTO> friends = friendshipService.getFriends(userId);
         return ResponseEntity.ok(friends);
     }
+
+    @GetMapping("/{userId}/list-request")
+    public ResponseEntity<?> getFriendRequests(@PathVariable Long userId) {
+        List<UserDTO> requests = friendshipService.getFriendRequests(userId);
+        return ResponseEntity.ok(requests);
+    }
 }

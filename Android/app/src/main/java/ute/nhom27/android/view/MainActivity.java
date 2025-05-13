@@ -25,6 +25,7 @@ import com.google.android.material.navigation.NavigationView;
 import ute.nhom27.android.BaseActivity;
 import ute.nhom27.android.R;
 import ute.nhom27.android.SettingsActivity;
+import ute.nhom27.android.view.fragment.FriendContainerFragment;
 import ute.nhom27.android.view.fragment.FriendListFragment;
 import ute.nhom27.android.view.fragment.MessageListFragment;
 
@@ -37,9 +38,8 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-            return insets;
         bottomNavigationView = findViewById(R.id.bottom_navigation);
-        // M?c d?nh hi?n th? MessageListFragment
+
         if (savedInstanceState == null) {
             loadFragment(new MessageListFragment());
         }
@@ -56,9 +56,8 @@ public class MainActivity extends BaseActivity {
             if (itemId == R.id.nav_messages) {
                 selectedFragment = new MessageListFragment();
             } else if (itemId == R.id.nav_contacts) {
-                selectedFragment = new FriendListFragment();
+                selectedFragment = new FriendContainerFragment();
             }
-            // Các m?c khác có th? du?c x? lý t?i dây
 
             if (selectedFragment != null) {
                 loadFragment(selectedFragment);
@@ -72,7 +71,7 @@ public class MainActivity extends BaseActivity {
 
     private void loadFragment(Fragment fragment) {
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragment_container, fragment); // fragment_container là FrameLayout trong activity_main.xml
+        transaction.replace(R.id.fragment_container, fragment); // fragment_container lï¿½ FrameLayout trong activity_main.xml
         transaction.commit();
     }
 }

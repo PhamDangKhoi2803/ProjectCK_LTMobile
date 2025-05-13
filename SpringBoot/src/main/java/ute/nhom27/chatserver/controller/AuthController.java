@@ -51,7 +51,9 @@ public class AuthController {
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+
             User user = userDetailsService.getUserByPhoneOrEmail(loginRequest.getPhoneOrEmail());
+            final String jwt = jwtUtil.generateToken(loginRequest.getPhoneOrEmail());
             if (user == null) {
                 logger.error("User not found: {}", loginRequest.getPhoneOrEmail());
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -115,9 +117,6 @@ public class AuthController {
             // Lưu người dùng
             user = userService.saveUser(user);
 
-            // Tạo JWT token
-            final UserDetails userDetails = userDetailsService.loadUserByUsername(user.getPhone());
-            //final String jwt = jwtUtil.generateToken(userDetails.getUsername());
             final String jwt = jwtUtil.generateToken(user.getPhone());
 
             // Tạo UserDTO
@@ -162,14 +161,7 @@ public class AuthController {
             user.setThemePreference(themeUpdateRequest.getThemePreference());
             userService.saveUser(user);
 
-            UserDTO userDTO = new UserDTO();
-            userDTO.setId(user.getId());
-            userDTO.setUsername(user.getUsername());
-            userDTO.setEmail(user.getEmail());
-            userDTO.setPhone(user.getPhone());
-            userDTO.setPublicKey(user.getPublicKey() != null ? user.getPublicKey() : "");
-            userDTO.setNotificationToken(user.getNotificationToken() != null ? user.getNotificationToken() : "");
-            userDTO.setThemePreference(user.getThemePreference() != null ? user.getThemePreference() : "light");
+            UserDTO userDTO = userService.convertToDTO(user);
 
             logger.info("Theme updated for user: {}", user.getUsername());
             return ResponseEntity.ok(userDTO);

@@ -34,7 +34,7 @@ public class SettingsActivity extends BaseActivity {
         spinnerTheme = findViewById(R.id.spinnerTheme);
         btnSaveTheme = findViewById(R.id.btnSaveTheme);
         sharedPrefManager = new SharedPrefManager(this);
-        apiService = ApiClient.getClient().create(ApiService.class);
+        apiService = ApiClient.getAuthClient(this).create(ApiService.class);
 
         // Thiết lập Spinner
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,

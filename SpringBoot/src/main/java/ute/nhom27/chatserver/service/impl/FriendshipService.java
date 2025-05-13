@@ -92,4 +92,18 @@ public class FriendshipService implements IFriendshipService {
 
         return friends;
     }
+
+    @Override
+    public List<UserDTO> getFriendRequests(Long userId) {
+        // Lấy danh sách Friendship với trạng thái PENDING mà userId là người nhận (receiver)
+        List<Friendship> pendingRequests = friendshipRepository.findByFriendIdAndStatus(userId, "PENDING");
+        List<UserDTO> requestSenders = new ArrayList<>();
+
+        for (Friendship f : pendingRequests) {
+            User sender = f.getUser(); // Người gửi lời mời là user
+            requestSenders.add(userService.convertToDTO(sender));
+        }
+
+        return requestSenders;
+    }
 }
