@@ -59,7 +59,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendListAdapter.Us
 
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
-            avatarImage = itemView.findViewById(R.id.avatar);
+            avatarImage = itemView.findViewById(R.id.user_avatar);
             nameText = itemView.findViewById(R.id.user_name);
             acceptButton = itemView.findViewById(R.id.btn_accept);
             rejectButton = itemView.findViewById(R.id.btn_reject);
