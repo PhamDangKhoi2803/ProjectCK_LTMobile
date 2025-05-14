@@ -1,18 +1,22 @@
 package ute.nhom27.android.adapter;
 
 import android.content.Context;
-import android.content.SharedPreferences;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 
 import okhttp3.ResponseBody;
@@ -23,22 +27,24 @@ import ute.nhom27.android.R;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.response.UserResponse;
+import ute.nhom27.android.network.WebSocketClient;
 import ute.nhom27.android.utils.SharedPrefManager;
 
 public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdapter.RequestViewHolder> {
 
     private List<UserResponse> requestList;
-    public  Context context;
+    private Context context;
     private OnItemActionListener listener;
+    private WebSocketClient webSocketClient;
 
     public interface OnItemActionListener {
         void onItemClick(UserResponse user);
-        // Bạn có thể thêm các hành động khác, ví dụ: onAccept(UserResponse user), onReject(UserResponse user)
     }
 
-    public FriendRequestAdapter(List<UserResponse> requestList, Context context, OnItemActionListener listener) {
+    public FriendRequestAdapter(List<UserResponse> requestList, Context context, WebSocketClient webSocketClient, OnItemActionListener listener) {
         this.requestList = requestList;
         this.context = context;
+        this.webSocketClient = webSocketClient;
         this.listener = listener;
     }
 
@@ -60,7 +66,7 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
         return requestList != null ? requestList.size() : 0;
     }
 
-    static class RequestViewHolder extends RecyclerView.ViewHolder {
+    class RequestViewHolder extends RecyclerView.ViewHolder {
         ImageView avatarImage;
         TextView nameText;
         View acceptButton, rejectButton;
@@ -69,7 +75,6 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
             super(itemView);
             avatarImage = itemView.findViewById(R.id.user_avatar);
             nameText = itemView.findViewById(R.id.user_name);
-            // Giả sử bạn mở rộng layout item_user.xml để thêm 2 nút chấp nhận và từ chối
             acceptButton = itemView.findViewById(R.id.btn_accept);
             rejectButton = itemView.findViewById(R.id.btn_reject);
         }
@@ -90,14 +95,21 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
             acceptButton.setOnClickListener(v -> {
                 SharedPrefManager sharedPrefManager = new SharedPrefManager(v.getContext());
                 Long currentUserId = sharedPrefManager.getUser().getId();
-                Long senderId = user.getId();    // ID người gửi lời mời
+                Long senderId = user.getId();
 
                 ApiService apiService = ApiClient.getAuthClient(v.getContext()).create(ApiService.class);
                 apiService.acceptFriendRequest(currentUserId, senderId).enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful()) {
-                            Toast.makeText(itemView.getContext(), "Đã chấp nhận", Toast.LENGTH_SHORT).show();
+                            // Xóa khỏi danh sách và cập nhật RecyclerView
+                            int position = getAdapterPosition();
+                            if (position != RecyclerView.NO_POSITION) {
+                                requestList.remove(position);
+                                notifyItemRemoved(position);
+                            }
+                            // Gửi thông báo WebSocket
+                            sendWebSocketNotification(currentUserId, senderId, "FRIEND_ACCEPT");
                         } else {
                             Toast.makeText(itemView.getContext(), "Lỗi khi chấp nhận", Toast.LENGTH_SHORT).show();
                         }
@@ -109,6 +121,7 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
                     }
                 });
             });
+
             rejectButton.setOnClickListener(v -> {
                 SharedPrefManager sharedPrefManager = new SharedPrefManager(v.getContext());
                 Long currentUserId = sharedPrefManager.getUser().getId();
@@ -119,7 +132,14 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful()) {
-                            Toast.makeText(itemView.getContext(), "Đã từ chối", Toast.LENGTH_SHORT).show();
+                            // Xóa khỏi danh sách và cập nhật RecyclerView
+                            int position = getAdapterPosition();
+                            if (position != RecyclerView.NO_POSITION) {
+                                requestList.remove(position);
+                                notifyItemRemoved(position);
+                            }
+                            // Gửi thông báo WebSocket
+                            sendWebSocketNotification(currentUserId, senderId, "FRIEND_REJECT");
                         } else {
                             Toast.makeText(itemView.getContext(), "Lỗi khi từ chối", Toast.LENGTH_SHORT).show();
                         }
@@ -131,6 +151,28 @@ public class FriendRequestAdapter extends RecyclerView.Adapter<FriendRequestAdap
                     }
                 });
             });
+        }
+
+        private void sendWebSocketNotification(Long receiverId, Long senderId, String type) {
+            if (webSocketClient != null) {
+                try {
+                    JSONObject notification = new JSONObject();
+                    notification.put("senderId", receiverId);
+                    notification.put("receiverId", senderId);
+                    notification.put("type", type);
+                    notification.put("usernameSender", new SharedPrefManager(context).getUser().getUsername());
+                    notification.put("content", type.equals("FRIEND_ACCEPT") ?
+                            " đã chấp nhận lời mời kết bạn của bạn" :
+                            " đã từ chối lời mời kết bạn của bạn");
+                    // Gửi đến /app/notification.send thay vì /app/chat.sendMessage
+                    webSocketClient.sendMessage(notification.toString());
+                } catch (JSONException e) {
+                    Toast.makeText(context, "Lỗi gửi thông báo WebSocket", Toast.LENGTH_SHORT).show();
+                    Log.e("WebSocket", "Error creating JSON: " + e.getMessage());
+                }
+            } else {
+                Toast.makeText(context, "WebSocket không được khởi tạo", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }

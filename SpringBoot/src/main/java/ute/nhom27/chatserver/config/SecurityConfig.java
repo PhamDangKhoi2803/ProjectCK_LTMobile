@@ -26,6 +26,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // Tắt CSRF
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Cho phép tất cả yêu cầu tới /auth/**
+                        .requestMatchers("/chat/**").permitAll()
                         .anyRequest().authenticated() // Các yêu cầu khác cần xác thực
                 )
                 .sessionManagement(session -> session

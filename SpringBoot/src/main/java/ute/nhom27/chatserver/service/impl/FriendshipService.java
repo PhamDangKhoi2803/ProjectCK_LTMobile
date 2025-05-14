@@ -34,8 +34,12 @@ public class FriendshipService implements IFriendshipService {
 
         if (sender.isEmpty() || receiver.isEmpty()) return false;
 
+        //Kiểm tra 2 phía
         boolean exists = friendshipRepository.existsByUserIdAndFriendId(senderId, receiverId);
         if (exists) return false;
+
+        boolean exists2 = friendshipRepository.existsByUserIdAndFriendId(receiverId, senderId);
+        if (exists2) return false;
 
         Friendship friendship = new Friendship();
         friendship.setUser(sender.get());
@@ -54,13 +58,6 @@ public class FriendshipService implements IFriendshipService {
         Friendship friendship = request.get();
         friendship.setStatus("ACCEPTED");
         friendshipRepository.save(friendship);
-
-        // Thêm bản ghi phản hồi
-        Friendship reverse = new Friendship();
-        reverse.setUser(friendship.getFriend());
-        reverse.setFriend(friendship.getUser());
-        reverse.setStatus("ACCEPTED");
-        friendshipRepository.save(reverse);
 
         return true;
     }

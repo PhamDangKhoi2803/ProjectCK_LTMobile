@@ -1,9 +1,12 @@
 package ute.nhom27.chatserver.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ute.nhom27.chatserver.dto.UserDTO;
+import ute.nhom27.chatserver.entity.User;
 import ute.nhom27.chatserver.service.IFriendshipService;
 import ute.nhom27.chatserver.service.IUserService;
 
@@ -13,11 +16,15 @@ import java.util.List;
 @RequestMapping("/api/friends")
 public class FriendshipController {
 
+    private static final Logger log = LoggerFactory.getLogger(FriendshipController.class);
     @Autowired
     private IFriendshipService friendshipService;
 
     @Autowired
     private IUserService userService;
+
+    @Autowired
+    private NotificationController notificationController;
 
     // Gửi lời mời kết bạn
     @PostMapping("/request")
@@ -38,6 +45,12 @@ public class FriendshipController {
             return ResponseEntity.badRequest().body("Đã tồn tại lời mời hoặc là bạn bè");
         }
 
+        // Gửi thông báo qua NotificationController
+        log.info("Sending friend request notification to receiverId: {}, from senderId: {}", receiverId, senderId);
+        String content = "Bạn nhận được lời mời kết bạn từ " + userService.getUserById(senderId)
+                .map(User::getUsername).orElse("Unknown");
+        notificationController.sendNotification(receiverId, senderId, content, "FRIEND_REQUEST");
+
         return ResponseEntity.ok("Đã gửi lời mời kết bạn");
     }
 
@@ -48,6 +61,12 @@ public class FriendshipController {
         if (!success) {
             return ResponseEntity.badRequest().body("Không tìm thấy lời mời kết bạn hoặc đã xử lý rồi");
         }
+
+        // Gửi thông báo chấp nhận
+        String content = userService.getUserById(senderId)
+                .map(User::getUsername).orElse("Unknown") + " đã chấp nhận lời mời kết bạn của bạn";
+        notificationController.sendNotification(senderId, receiverId, content, "FRIEND_ACCEPT");
+
         return ResponseEntity.ok("Đã chấp nhận lời mời kết bạn");
     }
 
@@ -58,6 +77,12 @@ public class FriendshipController {
         if (!success) {
             return ResponseEntity.badRequest().body("Không tìm thấy lời mời kết bạn hoặc đã xử lý rồi");
         }
+
+        // Gửi thông báo từ chối
+        String content = userService.getUserById(senderId)
+                .map(User::getUsername).orElse("Unknown") + " đã từ chối lời mời kết bạn của bạn";
+        notificationController.sendNotification(senderId, receiverId, content, "FRIEND_REJECT");
+
         return ResponseEntity.ok("Đã từ chối lời mời kết bạn");
     }
 
