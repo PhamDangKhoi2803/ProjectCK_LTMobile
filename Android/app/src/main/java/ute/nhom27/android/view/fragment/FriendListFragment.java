@@ -24,6 +24,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ute.nhom27.android.R;
 import ute.nhom27.android.adapter.FriendAdapter;
+import ute.nhom27.android.adapter.FriendListAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.response.NotificationResponse;
@@ -125,13 +126,15 @@ public class FriendListFragment extends Fragment implements OnMessageReceivedLis
                     if (friends == null) {
                         friends = new ArrayList<>();
                     }
-                    adapter = new FriendListAdapter(friends, friend -> {
+                    adapter = new FriendAdapter(friends, FriendAdapter.TYPE_FRIEND_LIST);
+                    // Set các listener
+                    adapter.setOnMessageClickListener(friend -> {
                         Toast.makeText(getContext(), "Đã chọn: " + friend.getUsername(), Toast.LENGTH_SHORT).show();
                         // Log để kiểm tra giá trị
                         Log.d("FriendListFragment", "Friend ID: " + friend.getId());
                         Log.d("FriendListFragment", "Friend Name: " + friend.getUsername());
                         Log.d("FriendListFragment", "Friend Avatar: " + friend.getAvatarURL());
-                        // TODO: mở màn hình chat riêng hoặc thông tin bạn
+
                         Intent intent = new Intent(getActivity(), ChatActivity.class);
                         intent.putExtra("receiverId", friend.getId());
                         intent.putExtra("receiverName", friend.getUsername());

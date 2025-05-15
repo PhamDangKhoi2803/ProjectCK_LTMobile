@@ -1,5 +1,6 @@
 package ute.nhom27.android.adapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +13,8 @@ import com.bumptech.glide.Glide;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -91,13 +94,34 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
     }
 
     private String formatTime(String timestamp) {
+//        if (timestamp == null) {
+//            return "";
+//        }
+//        try {
+//            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS", Locale.getDefault());
+//            SimpleDateFormat outputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+//            Date date = inputFormat.parse(timestamp);
+//            return outputFormat.format(date);
+//        } catch (ParseException e) {
+//            return timestamp;
+//        }
+
+//        if (timestamp == null || timestamp.isEmpty()) {
+//            return "";
+//        }
+
         try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
-            SimpleDateFormat outputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            Date date = inputFormat.parse(timestamp);
-            return outputFormat.format(date);
-        } catch (ParseException e) {
-            return timestamp;
+            // Định dạng timestamp từ LocalDateTime
+            DateTimeFormatter inputFormatter = DateTimeFormatter.ISO_DATE_TIME;
+            LocalDateTime dateTime = LocalDateTime.parse(timestamp, inputFormatter);
+
+            // Format thời gian hiển thị
+            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
+            return dateTime.format(outputFormatter);
+
+        } catch (Exception e) {
+            Log.e("ChatAdapter", "Error parsing timestamp: " + timestamp, e);
+            return "";
         }
     }
 

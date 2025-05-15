@@ -27,6 +27,7 @@ import com.bumptech.glide.Glide;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -306,8 +307,9 @@ public class ChatActivity extends BaseActivity {
         message.setReceiver(receiver);
         message.setContent(messageText);
         message.setStatus("SENT");
-        message.setTimestamp(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-                .format(new Date()));
+        // Sử dụng LocalDateTime thay vì SimpleDateFormat
+        LocalDateTime now = LocalDateTime.now();
+        message.setTimestamp(now.toString()); // Sẽ tự động format theo ISO-8601
 
         apiService.sendMessage(message)
                 .enqueue(new Callback<ChatMessage>() {

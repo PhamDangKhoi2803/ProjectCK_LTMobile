@@ -34,6 +34,9 @@ public interface ApiService {
     @GET("users/{userId}/messages")
     Call<List<ChatMessage>> getMessages(@Path("userId") Long userId);
 
+    @POST("messages")
+    Call<ChatMessage> sendMessage(@Body ChatMessage message);
+
     @GET("api/messages/friends/{userId}")
     Call<List<MessageListResponse>> getFriendLastMessages(@Path("userId") Long userId);
 
