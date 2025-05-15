@@ -1,23 +1,37 @@
 package ute.nhom27.android.view.fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.loader.content.CursorLoader;
 
+import com.bumptech.glide.Glide;
+
+import java.io.File;
 import java.io.IOException;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -26,20 +40,29 @@ import ute.nhom27.android.R;
 import ute.nhom27.android.SettingsActivity;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
+import ute.nhom27.android.api.PasswordChangeRequest;
 import ute.nhom27.android.api.ThemeUpdateRequest;
 import ute.nhom27.android.model.User;
 import ute.nhom27.android.utils.SharedPrefManager;
 import ute.nhom27.android.view.activities.LoginActivity;
 
 public class SettingsFragment extends Fragment {
-
+    private static final int PICK_IMAGE_REQUEST = 1;
     private Spinner spinnerTheme;
     private Button btnSaveTheme;
+    private Button btnLogout;
+
+    private CircleImageView ivAvatar;
+    private Button btnChangeAvatar;
+    private TextView tvEmail;
+    private TextView tvPhone;
+    private TextView tvFriendsCount;
+    private Button btnChangePassword;
+
     private SharedPrefManager sharedPrefManager;
     private ApiService apiService;
     private ThemeChange themeChange;
 
-    private Button btnLogout;
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -72,23 +95,47 @@ public class SettingsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Khởi tạo các view
+        // Initialize all views
+        initializeViews(view);
+
+        // Initialize SharedPrefManager and ApiService
+        if (getContext() != null) {
+            sharedPrefManager = new SharedPrefManager(getContext());
+            apiService = ApiClient.getAuthClient(getContext()).create(ApiService.class);
+        }
+
+        // Setup spinner
+        setupSpinner();
+
+        // Load user info
+        loadUserInfo();
+
+        // Setup click listeners
+        setupClickListeners();
+    }
+
+    private void initializeViews(View view) {
+        // Existing views
         spinnerTheme = view.findViewById(R.id.spinnerTheme);
         btnSaveTheme = view.findViewById(R.id.btnSaveTheme);
         btnLogout = view.findViewById(R.id.btnLogout);
 
-        // Khởi tạo SharedPrefManager và ApiService
-        if (getContext() != null) {
-            sharedPrefManager = new SharedPrefManager(getContext());
-            apiService = ApiClient.getAuthClient(getContext()).create(ApiService.class);
+        // New views
+        ivAvatar = view.findViewById(R.id.ivAvatar);
+        btnChangeAvatar = view.findViewById(R.id.btnChangeAvatar);
+        tvEmail = view.findViewById(R.id.tvEmail);
+        tvPhone = view.findViewById(R.id.tvPhone);
+        tvFriendsCount = view.findViewById(R.id.tvFriendsCount);
+        btnChangePassword = view.findViewById(R.id.btnChangePassword);
+    }
 
-            // Thiết lập Spinner
+    private void setupSpinner() {
+        if (getContext() != null) {
             ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
                     R.array.theme_options, android.R.layout.simple_spinner_item);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerTheme.setAdapter(adapter);
 
-            // Chọn theme hiện tại
             String currentTheme = sharedPrefManager.getThemePreference();
             if ("dark".equals(currentTheme)) {
                 spinnerTheme.setSelection(1);
@@ -96,15 +143,182 @@ public class SettingsFragment extends Fragment {
                 spinnerTheme.setSelection(0);
             }
         }
+    }
 
-        // Xử lý sự kiện nút Save Theme
+    private void loadUserInfo() {
+        User currentUser = sharedPrefManager.getUser();
+        if (currentUser != null) {
+            tvEmail.setText("Email: " + currentUser.getEmail());
+            tvPhone.setText("Số điện thoại: " + currentUser.getPhone());
+
+            // Load avatar if exists
+            if (currentUser.getAvatarURL() != null && !currentUser.getAvatarURL().isEmpty()) {
+                Glide.with(this)
+                        .load(currentUser.getAvatarURL())
+                        .placeholder(R.drawable.default_avatar)
+                        .error(R.drawable.default_avatar)
+                        .into(ivAvatar);
+            }
+
+            // Load friends count
+            loadFriendsCount();
+        }
+    }
+
+    private void loadFriendsCount() {
+        User currentUser = sharedPrefManager.getUser();
+        if (currentUser == null) return;
+
+        String token = "Bearer " + sharedPrefManager.getToken();
+        apiService.getFriendsCount(currentUser.getId(), token).enqueue(new Callback<Integer>() {
+            @Override
+            public void onResponse(Call<Integer> call, Response<Integer> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    tvFriendsCount.setText("Số bạn bè: " + response.body());
+                } else {
+                    Toast.makeText(getContext(), "Không thể tải số lượng bạn bè", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Integer> call, Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setupClickListeners() {
+        // Existing listeners
         btnSaveTheme.setOnClickListener(v -> saveTheme());
         btnLogout.setOnClickListener(v -> logout());
+
+        // New listeners
+        btnChangeAvatar.setOnClickListener(v -> openImagePicker());
+        btnChangePassword.setOnClickListener(v -> showChangePasswordDialog());
+    }
+
+    private void openImagePicker() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Chọn ảnh đại diện"), PICK_IMAGE_REQUEST);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK
+                && data != null && data.getData() != null) {
+            Uri imageUri = data.getData();
+            uploadAvatar(imageUri);
+        }
+    }
+
+    private void uploadAvatar(Uri imageUri) {
+        User currentUser = sharedPrefManager.getUser();
+        if (currentUser == null) return;
+
+        File imageFile = new File(getRealPathFromUri(imageUri));
+        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), imageFile);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("avatar", imageFile.getName(), requestFile);
+
+        String token = "Bearer " + sharedPrefManager.getToken();
+        apiService.uploadAvatar(currentUser.getId(), body, token).enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    sharedPrefManager.saveUser(response.body());
+                    loadUserInfo();
+                    Toast.makeText(getContext(), "Cập nhật ảnh đại diện thành công", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Lỗi khi cập nhật ảnh đại diện", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private String getRealPathFromUri(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        CursorLoader loader = new CursorLoader(requireContext(), uri, projection, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int columnIdx = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(columnIdx);
+        cursor.close();
+        return result;
+    }
+
+    private void showChangePasswordDialog() {
+        if (getContext() == null) return;
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_change_password, null);
+        EditText etCurrentPassword = dialogView.findViewById(R.id.etCurrentPassword);
+        EditText etNewPassword = dialogView.findViewById(R.id.etNewPassword);
+        EditText etConfirmPassword = dialogView.findViewById(R.id.etConfirmPassword);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Đổi mật khẩu")
+                .setView(dialogView)
+                .setPositiveButton("Đổi mật khẩu", null)
+                .setNegativeButton("Hủy", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(dialogInterface -> {
+            Button button = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            button.setOnClickListener(view -> {
+                String currentPassword = etCurrentPassword.getText().toString();
+                String newPassword = etNewPassword.getText().toString();
+                String confirmPassword = etConfirmPassword.getText().toString();
+
+                if (currentPassword.isEmpty() || newPassword.isEmpty() || confirmPassword.isEmpty()) {
+                    Toast.makeText(getContext(), "Vui lòng điền đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (!newPassword.equals(confirmPassword)) {
+                    Toast.makeText(getContext(), "Mật khẩu mới không khớp", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                changePassword(currentPassword, newPassword);
+                dialog.dismiss();
+            });
+        });
+        dialog.show();
+    }
+
+    private void changePassword(String currentPassword, String newPassword) {
+        User currentUser = sharedPrefManager.getUser();
+        if (currentUser == null) return;
+
+        String token = "Bearer " + sharedPrefManager.getToken();
+        PasswordChangeRequest request = new PasswordChangeRequest(currentPassword, newPassword);
+
+        apiService.changePassword(currentUser.getId(), request, token).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(getContext(), "Đổi mật khẩu thành công", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Mật khẩu hiện tại không đúng", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void saveTheme() {
         if (getContext() == null) return;
-        
+
         String themePreference = spinnerTheme.getSelectedItem().toString();
         sharedPrefManager.saveThemePreference(themePreference);
         if (themeChange != null) {
@@ -124,7 +338,7 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 if (getContext() == null) return;
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     sharedPrefManager.saveUser(response.body());
                     Toast.makeText(getContext(), "Đã lưu giao diện: " + themePreference, Toast.LENGTH_SHORT).show();

@@ -3,13 +3,16 @@ package ute.nhom27.android.api;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import ute.nhom27.android.model.AISuggestion;
@@ -129,4 +132,25 @@ public interface ApiService {
     Call<DeepAIResponse> getChatResponse(
             @Header("Authorization") String authHeader,
             @Body DeepAIRequest request
-    );}
+    );
+    @GET("api/users/{userId}/friends/count")
+    Call<Integer> getFriendsCount(
+            @Path("userId") Long userId,
+            @Header("Authorization") String token
+    );
+
+    @Multipart
+    @POST("api/users/{userId}/avatar")
+    Call<User> uploadAvatar(
+            @Path("userId") Long userId,
+            @Part MultipartBody.Part avatar,
+            @Header("Authorization") String token
+    );
+
+    @POST("api/users/{userId}/change-password")
+    Call<Void> changePassword(
+            @Path("userId") Long userId,
+            @Body PasswordChangeRequest request,
+            @Header("Authorization") String token
+    );
+}

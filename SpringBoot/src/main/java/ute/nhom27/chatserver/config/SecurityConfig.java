@@ -28,6 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll() // Cho phép tất cả yêu cầu tới /auth/**
                         .requestMatchers("/chat/**").permitAll()
                         .requestMatchers("/api/messages/**").authenticated()
+                        .requestMatchers("/api/users/**").permitAll()
                         .anyRequest().authenticated() // Các yêu cầu khác cần xác thực
                 )
                 .sessionManagement(session -> session

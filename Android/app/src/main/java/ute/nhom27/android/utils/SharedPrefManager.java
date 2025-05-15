@@ -42,6 +42,7 @@ public class SharedPrefManager {
         user.setEmail(prefs.getString("email", null));
         user.setPhone(prefs.getString("phone", null));
         user.setThemePreference(prefs.getString("themePreference", "light"));
+        user.setAvatarURL(prefs.getString("avatarURL", null));
         return user;
     }
 

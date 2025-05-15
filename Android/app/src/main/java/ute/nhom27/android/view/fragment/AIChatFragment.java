@@ -29,6 +29,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ute.nhom27.android.R;
+import ute.nhom27.android.adapter.AIChatAdapter;
 import ute.nhom27.android.adapter.ChatAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
@@ -47,7 +48,7 @@ public class AIChatFragment extends Fragment {
     private EditText etMessage;
     private ImageButton btnSend;
     private TextView tvName, tvStatus;
-    private ChatAdapter chatAdapter;
+    private AIChatAdapter chatAdapter;
     private ApiService apiService;
     private Long currentUserId;
     private List<MessageResponse> messageList;
@@ -71,17 +72,6 @@ public class AIChatFragment extends Fragment {
     }
 
     private void initViews(View view) {
-//        rvMessages = view.findViewById(R.id.rvMessages);
-//        etMessage = view.findViewById(R.id.etMessage);
-//        btnSend = view.findViewById(R.id.btnSend);
-//        tvName = view.findViewById(R.id.tvName);
-//        tvStatus = view.findViewById(R.id.tvStatus);
-//
-//        view.findViewById(R.id.btnAttachment).setVisibility(View.GONE);
-//        view.findViewById(R.id.btnEmoji).setVisibility(View.GONE);
-//        view.findViewById(R.id.btnVoice).setVisibility(View.GONE);
-//        view.findViewById(R.id.btnVoiceCall).setVisibility(View.GONE);
-//        view.findViewById(R.id.btnVideoCall).setVisibility(View.GONE);
         rvMessages = view.findViewById(R.id.rvMessages);
         etMessage = view.findViewById(R.id.etMessage);
         btnSend = view.findViewById(R.id.btnSend);
@@ -126,17 +116,17 @@ public class AIChatFragment extends Fragment {
                 .into(ivAvatar);
     }
 
-    private void setupRecyclerView() {
-        messageList = new ArrayList<>();
-        chatAdapter = new ChatAdapter(messageList, currentUserId, AI_NAME);
-        rvMessages.setLayoutManager(new LinearLayoutManager(getContext()));
-        rvMessages.setAdapter(chatAdapter);
-    }
-
     private void setupServices() {
         apiService = ApiClient.getOpenAiClient(OPENAI_API_KEY).create(ApiService.class);
         SharedPrefManager prefManager = new SharedPrefManager(requireContext());
         currentUserId = prefManager.getUser().getId();
+    }
+
+    private void setupRecyclerView() {
+        messageList = new ArrayList<>();
+        chatAdapter = new AIChatAdapter(messageList, currentUserId);
+        rvMessages.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvMessages.setAdapter(chatAdapter);
     }
 
     private void setupClickListeners(View view) {
@@ -206,11 +196,10 @@ public class AIChatFragment extends Fragment {
 
     private void sendAIMessage(String content) {
         MessageResponse aiMessage = new MessageResponse();
-        aiMessage.setSenderId(AI_USER_ID);
+        aiMessage.setSenderId(AI_USER_ID); // ID của AI
         aiMessage.setReceiverId(currentUserId);
         aiMessage.setContent(content);
         aiMessage.setStatus("SENT");
-        // Sửa lỗi setTimestamp
         aiMessage.setTimestamp(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME));
 
         requireActivity().runOnUiThread(() -> {
