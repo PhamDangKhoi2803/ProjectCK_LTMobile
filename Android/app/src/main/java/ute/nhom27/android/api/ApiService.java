@@ -65,7 +65,11 @@ public interface ApiService {
             @Query("receiverId") Long receiverId,
             @Query("senderId") Long senderId
     );
-
+    @GET("api/messages/private")
+    Call<List<ChatMessage>> getPrivateMessages(
+            @Query("userId1") Long userId1,
+            @Query("userId2") Long userId2
+    );
     @POST("friends")
     Call<Friendship> addFriend(@Body Friendship friendship);
 

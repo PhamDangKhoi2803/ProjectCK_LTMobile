@@ -1,5 +1,6 @@
 package ute.nhom27.android.view.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +27,7 @@ import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.response.UserResponse;
 import ute.nhom27.android.utils.SharedPrefManager;
+import ute.nhom27.android.view.activities.ChatActivity;
 
 public class FriendListFragment extends Fragment {
 
@@ -71,7 +73,16 @@ public class FriendListFragment extends Fragment {
                     }
                     adapter = new FriendListAdapter(friends, friend -> {
                         Toast.makeText(getContext(), "Đã chọn: " + friend.getUsername(), Toast.LENGTH_SHORT).show();
+                        // Log để kiểm tra giá trị
+                        Log.d("FriendListFragment", "Friend ID: " + friend.getId());
+                        Log.d("FriendListFragment", "Friend Name: " + friend.getUsername());
+                        Log.d("FriendListFragment", "Friend Avatar: " + friend.getAvatarURL());
                         // TODO: mở màn hình chat riêng hoặc thông tin bạn
+                        Intent intent = new Intent(getActivity(), ChatActivity.class);
+                        intent.putExtra("receiverId", friend.getId());
+                        intent.putExtra("receiverName", friend.getUsername());
+                        intent.putExtra("receiverAvatar", friend.getAvatarURL());
+                        startActivity(intent);
                     });
                     recyclerView.setAdapter(adapter);
                 } else {

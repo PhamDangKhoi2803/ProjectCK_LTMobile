@@ -32,7 +32,9 @@ public class MessageService implements IMessageService {
 
     @Override
     public List<ChatMessage> getPrivateMessages(Long user1Id, Long user2Id) {
-        return chatMessageRepository.findAllMessagesBetweenUsers(user1Id, user2Id);
+        //return chatMessageRepository.findAllMessagesBetweenUsers(user1Id, user2Id);
+        List<ChatMessage> messages = chatMessageRepository.findAllMessagesBetweenUsers(user1Id, user2Id);
+        return new ArrayList<>(messages);
     }
 
     @Override

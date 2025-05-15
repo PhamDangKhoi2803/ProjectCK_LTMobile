@@ -1,6 +1,7 @@
 package ute.nhom27.android.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,16 +12,25 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.List;
 import ute.nhom27.android.R;
+import ute.nhom27.android.model.User;
 import ute.nhom27.android.model.response.MessageListResponse;
+import ute.nhom27.android.view.activities.ChatActivity;
 
 public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.ViewHolder> {
 
     private List<MessageListResponse> friendList;
     private Context context;
+    private OnMessageClickListener listener; // Thêm listener
 
-    public MessageListAdapter(List<MessageListResponse> friendList, Context context) {
+    // Thêm interface callback
+    public interface OnMessageClickListener {
+        void onMessageClick(MessageListResponse message);
+    }
+
+    public MessageListAdapter(List<MessageListResponse> friendList, Context context, OnMessageClickListener listener) {
         this.friendList = friendList;
         this.context = context;
+        this.listener = listener;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -62,6 +72,12 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
                     .load(R.drawable.default_avatar)
                     .into(holder.avatar);
         }
+        // Thêm click listener cho item
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onMessageClick(friend);
+            }
+        });
     }
 
     @Override
