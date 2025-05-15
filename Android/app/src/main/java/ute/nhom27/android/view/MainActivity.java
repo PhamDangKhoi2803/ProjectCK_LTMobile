@@ -21,10 +21,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallService;
+import com.zegocloud.uikit.prebuilt.call.invite.ZegoUIKitPrebuiltCallInvitationConfig;
 
 import ute.nhom27.android.BaseActivity;
 import ute.nhom27.android.R;
 import ute.nhom27.android.SettingsActivity;
+import ute.nhom27.android.utils.SharedPrefManager;
 import ute.nhom27.android.view.fragment.FriendContainerFragment;
 import ute.nhom27.android.view.fragment.FriendListFragment;
 import ute.nhom27.android.view.fragment.MessageListFragment;
@@ -46,15 +49,21 @@ public class MainActivity extends BaseActivity implements ThemeChange{
             loadFragment(new MessageListFragment());
         }
 
+        SharedPrefManager prefManager = new SharedPrefManager(this);
+
+        long appID = 1041973249;   // yourAppID
+        String appSign = "ee8dace42b86b5d0be495cf3a6c8d5f0d78023701fa225a58f56bf00a628fb70";  // yourAppSign
+        String userID = prefManager.getUser().getUsername(); // yourUserID, userID should only contain numbers, English characters, and '_'.
+
+        ZegoUIKitPrebuiltCallInvitationConfig callInvitationConfig = new ZegoUIKitPrebuiltCallInvitationConfig();
+
+        ZegoUIKitPrebuiltCallService.init(getApplication(), appID, appSign, userID, userID,callInvitationConfig);
+
+
         bottomNavigationView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
 
-//			if (itemId == R.id.nav_settings) {
-//                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-//                startActivity(intent);
-//                return true;
-//            }
             if (itemId == R.id.nav_settings) {
                 selectedFragment = new SettingsFragment();
             }
