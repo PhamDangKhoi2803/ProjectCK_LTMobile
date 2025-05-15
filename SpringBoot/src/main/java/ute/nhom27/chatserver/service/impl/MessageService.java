@@ -3,7 +3,6 @@ package ute.nhom27.chatserver.service.impl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ute.nhom27.chatserver.dto.MessageListDTO;
-import ute.nhom27.chatserver.dto.UserDTO;
 import ute.nhom27.chatserver.entity.ChatMessage;
 import ute.nhom27.chatserver.entity.Friendship;
 import ute.nhom27.chatserver.entity.GroupMessage;
@@ -69,5 +68,10 @@ public class MessageService implements IMessageService {
                     isSeen
             );
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public void savePrivateMessage(ChatMessage message) {
+        chatMessageRepository.save(message);
     }
 }

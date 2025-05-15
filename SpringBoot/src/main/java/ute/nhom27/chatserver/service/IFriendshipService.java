@@ -15,4 +15,10 @@ public interface IFriendshipService {
     List<UserDTO> getFriends(Long userId);
 
     List<UserDTO> getFriendRequests(Long userId);
+
+    List<UserDTO> getSentFriendRequests(Long userId);
+    
+    List<UserDTO> getNonFriendUsers(Long userId);
+
+    boolean unfriend(Long userId, Long friendId);
 }

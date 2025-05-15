@@ -97,4 +97,57 @@ public class FriendshipController {
         List<UserDTO> requests = friendshipService.getFriendRequests(userId);
         return ResponseEntity.ok(requests);
     }
+
+    @GetMapping("/{userId}/sent-requests")
+    public ResponseEntity<?> getSentFriendRequests(@PathVariable Long userId) {
+        List<UserDTO> sentRequests = friendshipService.getSentFriendRequests(userId);
+        return ResponseEntity.ok(sentRequests);
+    }
+
+    @GetMapping("/{userId}/non-friends")
+    public ResponseEntity<?> getNonFriendUsers(@PathVariable Long userId) {
+        List<UserDTO> nonFriends = friendshipService.getNonFriendUsers(userId);
+        return ResponseEntity.ok(nonFriends);
+    }
+
+    @PostMapping("/remove")
+    public ResponseEntity<?> removeFriendRequest(@RequestParam Long senderId, @RequestParam Long receiverId) {
+        boolean success = friendshipService.rejectFriendRequest(senderId, receiverId);
+        if (!success) {
+            return ResponseEntity.badRequest().body("Không tìm thấy lời mời kết bạn hoặc đã xử lý rồi");
+        }
+
+        // Gửi thông báo thu hồi
+        String content = userService.getUserById(senderId)
+                .map(User::getUsername).orElse("Unknown") + " đã thu hồi lời mời kết bạn";
+        notificationController.sendNotification(receiverId, senderId, content, "FRIEND_REQUEST_WITHDRAWN");
+
+        return ResponseEntity.ok("Đã thu hồi lời mời kết bạn");
+    }
+
+    @PostMapping("/unfriend")
+    public ResponseEntity<?> unfriend(@RequestParam Long userId, @RequestParam Long friendId) {
+        if (userId.equals(friendId)) {
+            return ResponseEntity.badRequest().body("Không thể thực hiện với chính mình");
+        }
+
+        boolean userExists = userService.getUserById(userId).isPresent();
+        boolean friendExists = userService.getUserById(friendId).isPresent();
+
+        if (!userExists || !friendExists) {
+            return ResponseEntity.badRequest().body("Người dùng không tồn tại");
+        }
+
+        boolean success = friendshipService.unfriend(userId, friendId);
+        if (!success) {
+            return ResponseEntity.badRequest().body("Không phải là bạn bè hoặc đã xử lý rồi");
+        }
+
+        // Gửi thông báo hủy kết bạn
+        String content = userService.getUserById(userId)
+                .map(User::getUsername).orElse("Unknown") + " đã hủy kết bạn với bạn";
+        notificationController.sendNotification(friendId, userId, content, "UNFRIEND");
+
+        return ResponseEntity.ok("Đã hủy kết bạn thành công");
+    }
 }

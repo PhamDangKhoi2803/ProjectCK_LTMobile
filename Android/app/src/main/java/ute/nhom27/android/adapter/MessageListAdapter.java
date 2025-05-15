@@ -10,6 +10,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.List;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import ute.nhom27.android.R;
 import ute.nhom27.android.model.response.MessageListResponse;
 
@@ -17,6 +20,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
 
     private List<MessageListResponse> friendList;
     private Context context;
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public MessageListAdapter(List<MessageListResponse> friendList, Context context) {
         this.friendList = friendList;
@@ -49,8 +53,23 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
         MessageListResponse friend = friendList.get(position);
         holder.chatName.setText(friend.getFriendName());
         holder.lastMessage.setText(friend.getLastMessage());
-        holder.time.setText(friend.getTimestamp() != null ? friend.getTimestamp() : "Chưa có thời gian");
-        holder.status.setText(Boolean.TRUE.equals(friend.getIsSeen()) ? "Đã xem" : "Đã nhận");
+        
+        // Format thời gian
+        if (friend.getTimestamp() != null) {
+            holder.time.setText(getFormattedTimeAgo(friend.getTimestamp()));
+        } else {
+            holder.time.setText("");
+        }
+        
+        // Ẩn status nếu chưa có tin nhắn
+        if ("Chưa có tin nhắn".equals(friend.getLastMessage())) {
+            holder.status.setVisibility(View.GONE);
+            holder.time.setVisibility(View.GONE);
+        } else {
+            holder.status.setVisibility(View.VISIBLE);
+            holder.time.setVisibility(View.VISIBLE);
+            holder.status.setText(Boolean.TRUE.equals(friend.getIsSeen()) ? "Đã xem" : "Đã nhận");
+        }
 
         if (friend.getAvatarUrl() != null) {
             Glide.with(context)
@@ -61,6 +80,32 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
             Glide.with(context)
                     .load(R.drawable.default_avatar)
                     .into(holder.avatar);
+        }
+    }
+
+    private String getFormattedTimeAgo(String timestamp) {
+        try {
+            LocalDateTime messageTime = LocalDateTime.parse(timestamp, formatter);
+            LocalDateTime now = LocalDateTime.now();
+            Duration duration = Duration.between(messageTime, now);
+
+            long hours = duration.toHours();
+            long days = duration.toDays();
+
+            if (days > 0) {
+                return days + " ngày trước";
+            } else if (hours > 0) {
+                return hours + " giờ trước";
+            } else {
+                long minutes = duration.toMinutes();
+                if (minutes <= 1) {
+                    return "Vừa xong";
+                } else {
+                    return minutes + " phút trước";
+                }
+            }
+        } catch (Exception e) {
+            return "";
         }
     }
 

@@ -30,20 +30,9 @@ public interface ApiService {
 
     @PUT("auth/update-theme")
     Call<User> updateTheme(@Body ThemeUpdateRequest request, @Header("Authorization") String token);
+    
     @GET("users/{userId}/messages")
     Call<List<ChatMessage>> getMessages(@Path("userId") Long userId);
-
-    @POST("messages")
-    Call<ChatMessage> sendMessage(@Body ChatMessage message);
-
-    @GET("groups/{userId}")
-    Call<List<ChatGroup>> getGroups(@Path("userId") Long userId);
-
-    @GET("groups/{groupId}/messages")
-    Call<List<GroupMessage>> getGroupMessages(@Path("groupId") Long groupId);
-
-    @POST("group-messages")
-    Call<GroupMessage> sendGroupMessage(@Body GroupMessage message);
 
     @GET("api/messages/friends/{userId}")
     Call<List<MessageListResponse>> getFriendLastMessages(@Path("userId") Long userId);
@@ -66,12 +55,27 @@ public interface ApiService {
             @Query("senderId") Long senderId
     );
 
-    @POST("friends")
-    Call<Friendship> addFriend(@Body Friendship friendship);
+    @GET("api/friends/{userId}/sent-requests")
+    Call<List<UserResponse>> getSentFriendRequests(@Path("userId") Long userId);
 
-    @GET("typing-status/{userId}")
-    Call<List<TypingStatus>> getTypingStatus(@Path("userId") Long userId);
+    @GET("api/friends/{userId}/non-friends")
+    Call<List<UserResponse>> getNonFriendUsers(@Path("userId") Long userId);
 
-    @POST("ai-suggestions")
-    Call<AISuggestion> getAISuggestion(@Body AISuggestionRequest request);
+    @POST("api/friends/remove")
+    Call<ResponseBody> removeFriendRequest(
+            @Query("senderId") Long senderId,
+            @Query("receiverId") Long receiverId
+    );
+
+    @POST("api/friends/request")
+    Call<ResponseBody> sendFriendRequest(
+            @Query("senderId") Long senderId,
+            @Query("receiverId") Long receiverId
+    );
+
+    @POST("api/friends/unfriend")
+    Call<ResponseBody> unfriend(
+            @Query("userId") Long userId,
+            @Query("friendId") Long friendId
+    );
 }

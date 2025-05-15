@@ -103,4 +103,62 @@ public class FriendshipService implements IFriendshipService {
 
         return requestSenders;
     }
+
+    @Override
+    public List<UserDTO> getSentFriendRequests(Long userId) {
+        // Lấy danh sách Friendship với trạng thái PENDING mà userId là người gửi (sender)
+        List<Friendship> sentRequests = friendshipRepository.findByUserIdAndStatus(userId, "PENDING");
+        List<UserDTO> receivers = new ArrayList<>();
+
+        for (Friendship f : sentRequests) {
+            User receiver = f.getFriend(); // Người nhận lời mời là friend
+            receivers.add(userService.convertToDTO(receiver));
+        }
+
+        return receivers;
+    }
+
+    @Override
+    public List<UserDTO> getNonFriendUsers(Long userId) {
+        List<User> allUsers = userRepository.findAll();
+        List<UserDTO> nonFriends = new ArrayList<>();
+
+        for (User user : allUsers) {
+            if (user.getId().equals(userId)) {
+                continue; // Bỏ qua chính người dùng hiện tại
+            }
+
+            // Kiểm tra xem có bất kỳ mối quan hệ nào giữa hai người dùng không
+            boolean hasRelation = friendshipRepository.existsByUserIdAndFriendId(userId, user.getId()) ||
+                                friendshipRepository.existsByUserIdAndFriendId(user.getId(), userId);
+
+            if (!hasRelation) {
+                nonFriends.add(userService.convertToDTO(user));
+            }
+        }
+
+        return nonFriends;
+    }
+
+    @Override
+    public boolean unfriend(Long userId, Long friendId) {
+        // Kiểm tra cả hai chiều của mối quan hệ bạn bè
+        Optional<Friendship> friendship1 = friendshipRepository.findByUserIdAndFriendId(userId, friendId);
+        Optional<Friendship> friendship2 = friendshipRepository.findByUserIdAndFriendId(friendId, userId);
+
+        boolean success = false;
+
+        // Xóa mối quan hệ nếu tồn tại và đã được chấp nhận
+        if (friendship1.isPresent() && "ACCEPTED".equals(friendship1.get().getStatus())) {
+            friendshipRepository.delete(friendship1.get());
+            success = true;
+        }
+
+        if (friendship2.isPresent() && "ACCEPTED".equals(friendship2.get().getStatus())) {
+            friendshipRepository.delete(friendship2.get());
+            success = true;
+        }
+
+        return success;
+    }
 }
