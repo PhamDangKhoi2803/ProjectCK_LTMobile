@@ -24,30 +24,4 @@ public class ChatserverApplication {
         SpringApplication.run(ChatserverApplication.class, args);
     }
 
-    @Bean
-    public CommandLineRunner commandLineRunner() {
-        return args -> {
-            System.out.println("\n========== TESTING GROUP MEMBERS ==========");
-
-            // Test với groupId = 4
-            Long groupId = 4L;
-            System.out.println("Getting members for group ID: " + groupId);
-
-            List<GroupMemberDTO> members = groupService.getGroupMembersWithInfo(groupId);
-
-            System.out.println("\nTotal members found: " + members.size());
-            System.out.println("\nMember Details:");
-
-            for (GroupMemberDTO member : members) {
-                System.out.println("\n-------------------");
-                System.out.println("Group ID: " + member.getGroupId());
-                System.out.println("User ID: " + member.getUserId());
-                System.out.println("Name: " + member.getName());
-                System.out.println("Role: " + member.getRole());
-                System.out.println("Avatar: " + member.getAvatar());
-            }
-
-            System.out.println("\n========== TEST COMPLETED ==========\n");
-        };
-    }
 }

@@ -157,8 +157,7 @@ public interface ApiService {
     @PUT("api/users/{userId}/avatar")
     Call<UserResponse> updateAvatar(
             @Path("userId") Long userId,
-            @Body String avatarUrl,
-            @Header("Authorization") String token
+            @Body String avatarUrl
     );
 
     @POST("api/users/{userId}/change-password")

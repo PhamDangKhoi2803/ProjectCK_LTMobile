@@ -238,25 +238,7 @@ public class SettingsFragment extends Fragment {
             public void onSuccess(String imageUrl) {
                 Log.d("Cloudinary", "Uploaded image URL: " + imageUrl);
 
-                // Lấy token từ SharedPrefManager
-                String token = sharedPrefManager.getToken();
-                if (token == null || token.isEmpty()) {
-                    Toast.makeText(getContext(), "Token không hợp lệ", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Log token trước khi thêm prefix
-                Log.d("Token Debug", "Original token: " + token);
-
-                // Thêm prefix "Bearer " nếu chưa có
-                if (!token.startsWith("Bearer ")) {
-                    token = "Bearer " + token;
-                }
-
-                // Log token sau khi thêm prefix
-                Log.d("Token Debug", "Token with prefix: " + token);
-
-                apiService.updateAvatar(currentUser.getId(), imageUrl, token).enqueue(new Callback<UserResponse>() {
+                apiService.updateAvatar(currentUser.getId(), imageUrl).enqueue(new Callback<UserResponse>() {
                     @Override
                     public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {

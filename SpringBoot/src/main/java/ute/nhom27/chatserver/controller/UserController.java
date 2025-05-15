@@ -87,39 +87,12 @@ public class UserController {
     @PutMapping("/{userId}/avatar")
     public ResponseEntity<?> updateAvatar(
             @PathVariable Long userId,
-            @RequestBody String avatarUrl,
-            @RequestHeader("Authorization") String token) {
+            @RequestBody String avatarUrl) {
         try {
-            log.info("Updating avatar for user {} with URL: {}", userId, avatarUrl);
 
-            // Kiểm tra token
-            if (token == null || !token.startsWith("Bearer ")) {
-                log.error("Invalid token format");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("Invalid token");
+            if (avatarUrl.startsWith("\"") && avatarUrl.endsWith("\"")) {
+                avatarUrl = avatarUrl.substring(1, avatarUrl.length() - 1);
             }
-
-            // Lấy user từ token
-            String jwtToken = token.substring(7);
-            log.info("JWT Token: {}", jwtToken);
-
-            String phone = jwtUtil.extractUsername(jwtToken);
-            log.info("Extracted phone from token: {}", phone);
-
-            User currentUser = userService.findByPhone(phone);
-            if (currentUser == null) {
-                log.error("User not found for phone: {}", phone);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("User not found");
-            }
-
-            // Kiểm tra quyền
-            if (!currentUser.getId().equals(userId)) {
-                log.error("Access denied for user {} trying to update user {}", currentUser.getId(), userId);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Access denied");
-            }
-
             // Cập nhật avatar
             User updatedUser = userService.updateAvatar(userId, avatarUrl);
             log.info("Successfully updated avatar for user {}", userId);
