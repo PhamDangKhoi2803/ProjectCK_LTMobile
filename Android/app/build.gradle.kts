@@ -66,4 +66,5 @@ dependencies {
 
     implementation ("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
+    implementation ("com.cloudinary:cloudinary-android:2.3.1")
 }

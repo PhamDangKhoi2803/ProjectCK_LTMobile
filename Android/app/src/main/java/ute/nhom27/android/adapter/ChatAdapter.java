@@ -1,47 +1,107 @@
 package ute.nhom27.android.adapter;
 
-import android.util.Log;
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
 import ute.nhom27.android.R;
-import ute.nhom27.android.model.ChatMessage;
 import ute.nhom27.android.model.response.MessageResponse;
-import ute.nhom27.android.utils.SharedPrefManager;
 
-public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
+public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHolder> {
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
 
-    private List<MessageResponse> messages;
+    private Context context;
+    private List<MessageResponse> messageList;
     private Long currentUserId;
+    private String receiverName;
 
-    private String currentName;
-
-
-    public ChatAdapter(List<MessageResponse> messages, Long currentUserId) {
-        this.messages = messages;
+    public ChatAdapter(List<MessageResponse> messageList, Long currentUserId, String receiverName) {
+        this.messageList = messageList;
         this.currentUserId = currentUserId;
+        this.receiverName = receiverName;
+    }
+
+    @NonNull
+    @Override
+    public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        context = parent.getContext();
+        View view;
+
+        if (viewType == VIEW_TYPE_SENT) {
+            view = LayoutInflater.from(context).inflate(R.layout.item_message_sent, parent, false);
+        } else {
+            view = LayoutInflater.from(context).inflate(R.layout.item_message_received, parent, false);
+        }
+
+        return new MessageViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
+        MessageResponse message = messageList.get(position);
+
+        if ("IMAGE".equals(message.getMediaType())) {
+            holder.messageImage.setVisibility(View.VISIBLE);
+            holder.messageText.setVisibility(View.GONE);
+
+            // Load ảnh từ URL Cloudinary trực tiếp bằng Glide
+            Glide.with(context)
+                    .load(message.getMediaUrl())
+                    .placeholder(R.drawable.default_avatar)
+                    .into(holder.messageImage);
+        } else {
+            holder.messageImage.setVisibility(View.GONE);
+            holder.messageText.setVisibility(View.VISIBLE);
+            holder.messageText.setText(message.getContent());
+        }
+
+        // Format và hiển thị thời gian
+        if (message.getTimestamp() != null) {
+            try {
+                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                Date date = inputFormat.parse(message.getTimestamp());
+                SimpleDateFormat outputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                String time = outputFormat.format(date);
+                holder.tvTime.setText(time);
+                holder.tvTime.setVisibility(View.VISIBLE);
+            } catch (ParseException e) {
+                e.printStackTrace();
+                holder.tvTime.setVisibility(View.GONE);
+            }
+        } else {
+            holder.tvTime.setVisibility(View.GONE);
+        }
+
+        // Hiển thị tên người gửi cho tin nhắn nhận
+        if (getItemViewType(position) == VIEW_TYPE_RECEIVED) {
+            holder.tvSenderName.setText(receiverName);
+            holder.tvSenderName.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public int getItemCount() {
+        return messageList.size();
     }
 
     @Override
     public int getItemViewType(int position) {
-        MessageResponse message = messages.get(position);
+        MessageResponse message = messageList.get(position);
         if (message.getSenderId().equals(currentUserId)) {
             return VIEW_TYPE_SENT;
         } else {
@@ -49,112 +109,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>{
         }
     }
 
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == VIEW_TYPE_SENT) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_message_sent, parent, false);
-            return new SentMessageHolder(view);
-        } else {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_message_received, parent, false);
-            return new ReceivedMessageHolder(view);
-        }
-    }
+    static class MessageViewHolder extends RecyclerView.ViewHolder {
+        TextView messageText;
+        ImageView messageImage;
+        TextView tvTime;
+        TextView tvSenderName;
 
-    @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        MessageResponse message = messages.get(position);
-        SharedPrefManager sharedPrefManager = new SharedPrefManager(holder.itemView.getContext());
-
-        if (holder instanceof SentMessageHolder) {
-            SentMessageHolder sentHolder = (SentMessageHolder) holder;
-            sentHolder.tvMessage.setText(message.getContent());
-            sentHolder.tvTime.setText(message.getFormattedTime());
-            sentHolder.tvStatus.setText(message.getStatus());
-
-            // Set status icon
-            if ("SEEN".equals(message.getStatus())) {
-                sentHolder.ivStatus.setImageResource(R.drawable.ic_delivered);
-            } else {
-                sentHolder.ivStatus.setImageResource(R.drawable.ic_sent);
-            }
-        } else if (holder instanceof ReceivedMessageHolder) {
-            ReceivedMessageHolder receivedHolder = (ReceivedMessageHolder) holder;
-            receivedHolder.tvMessage.setText(message.getContent());
-            receivedHolder.tvTime.setText(message.getFormattedTime());
-            receivedHolder.tvSenderName.setText(sharedPrefManager.getUser().getUsername());
-
-            // Load avatar using Glide
-            Glide.with(receivedHolder.ivAvatar.getContext())
-                    .load(sharedPrefManager.getUser().getAvatarURL())
-                    .placeholder(R.drawable.default_avatar)
-                    .error(R.drawable.default_avatar)
-                    .into(receivedHolder.ivAvatar);
-        }
-    }
-
-    @Override
-    public int getItemCount() {
-        return messages.size();
-    }
-
-    private String formatTime(LocalDateTime timestamp) {
-        if (timestamp == null) {
-            return "";
-        }
-        try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
-            SimpleDateFormat outputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            Date date = inputFormat.parse(String.valueOf(timestamp));
-            return outputFormat.format(date);
-        } catch (ParseException e) {
-            return String.valueOf(timestamp);
-        }
-
-//        if (timestamp == null) {
-//            return "";
-//        }
-//
-//        try {
-//            // Định dạng timestamp từ LocalDateTime
-//            DateTimeFormatter inputFormatter = DateTimeFormatter.ISO_DATE_TIME;
-//            LocalDateTime dateTime = timestamp;
-//
-//            // Format thời gian hiển thị
-//            DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("HH:mm");
-//            return dateTime.format(outputFormatter);
-//
-//        } catch (Exception e) {
-//            Log.e("ChatAdapter", "Error parsing timestamp: " + timestamp, e);
-//            return "";
-//        }
-    }
-
-    // ViewHolder classes
-    static class SentMessageHolder extends RecyclerView.ViewHolder {
-        TextView tvMessage, tvTime, tvStatus;
-        ImageView ivStatus;
-
-        SentMessageHolder(View itemView) {
+        MessageViewHolder(View itemView) {
             super(itemView);
-            tvMessage = itemView.findViewById(R.id.tvMessage);
-            tvTime = itemView.findViewById(R.id.tvTime);
-            tvStatus = itemView.findViewById(R.id.tvStatus);
-            ivStatus = itemView.findViewById(R.id.ivStatus);
-        }
-    }
-
-    static class ReceivedMessageHolder extends RecyclerView.ViewHolder {
-        TextView tvMessage, tvTime, tvSenderName;
-        ImageView ivAvatar;
-
-        ReceivedMessageHolder(View itemView) {
-            super(itemView);
-            tvMessage = itemView.findViewById(R.id.tvMessage);
+            messageText = itemView.findViewById(R.id.tvMessage);
+            messageImage = itemView.findViewById(R.id.ivImage);
             tvTime = itemView.findViewById(R.id.tvTime);
             tvSenderName = itemView.findViewById(R.id.tvSenderName);
-            ivAvatar = itemView.findViewById(R.id.ivAvatar);
         }
     }
 }

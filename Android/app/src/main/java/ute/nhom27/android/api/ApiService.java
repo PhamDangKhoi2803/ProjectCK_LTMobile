@@ -20,6 +20,7 @@ import ute.nhom27.android.model.GroupMessage;
 import ute.nhom27.android.model.GroupMember;
 import ute.nhom27.android.model.TypingStatus;
 import ute.nhom27.android.model.User;
+import ute.nhom27.android.model.request.MessageRequest;
 import ute.nhom27.android.model.response.MessageListResponse;
 import ute.nhom27.android.model.response.MessageResponse;
 import ute.nhom27.android.model.response.UserResponse;
@@ -112,6 +113,12 @@ public interface ApiService {
     @GET("api/groups/user/{userId}")
     Call<Map<String, Object>> getUserGroups(@Path("userId") Long userId);
 
+    @POST("api/messages/send")
+    Call<ResponseBody> sendPrivateMessage(@Body MessageRequest message);
+
+    @POST("api/messages/group/send") 
+    Call<Map<String, String>> sendGroupMessage(@Body MessageRequest message);
+
 //    @POST("api/text-generator")
 //    Call<OpenAiResponse> getChatResponse(
 //            @Header("Authorization") String authHeader,
@@ -122,5 +129,4 @@ public interface ApiService {
     Call<DeepAIResponse> getChatResponse(
             @Header("Authorization") String authHeader,
             @Body DeepAIRequest request
-    );
-}
+    );}
