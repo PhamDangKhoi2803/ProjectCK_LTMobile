@@ -1,30 +1,20 @@
-package ute.nhom27.chatserver.dto;
+package ute.nhom27.android.model.response;
 
-import lombok.Data;
+import android.icu.text.SimpleDateFormat;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
-@Data
-public class MessageDTO {
+public class MessageResponse {
     private Long senderId;
     private Long receiverId;
-    private String content; // Nội dung tin nhắn văn bản
-    private String mediaUrl; // URL của video/ảnh (nếu có)
-    private String mediaType; // Loại media: "IMAGE", "VIDEO" hoặc null (nếu chỉ có văn bản)
-    private LocalDateTime timestamp;
+    private String content;
+    private String mediaUrl;
+    private String mediaType;
+    private String timestamp;
     private String status;
     private boolean isGroup;
-
-    public MessageDTO(Long senderId, Long receiverId, String content, String mediaUrl, String mediaType, LocalDateTime timestamp, String status, boolean isGroup) {
-        this.senderId = senderId;
-        this.receiverId = receiverId;
-        this.content = content;
-        this.mediaUrl = mediaUrl;
-        this.mediaType = mediaType;
-        this.timestamp = timestamp;
-        this.status = status;
-        this.isGroup = isGroup;
-    }
 
     public Long getSenderId() {
         return senderId;
@@ -66,11 +56,28 @@ public class MessageDTO {
         this.mediaType = mediaType;
     }
 
-    public LocalDateTime getTimestamp() {
+    public String getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public String getFormattedTime() {
+        try {
+            if (timestamp != null) {
+                SimpleDateFormat inputFormat =
+                        new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS");
+                SimpleDateFormat outputFormat =
+                        new SimpleDateFormat("HH:mm");
+
+                Date date = inputFormat.parse(timestamp);
+                return outputFormat.format(date);
+            }
+            return "";
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
 

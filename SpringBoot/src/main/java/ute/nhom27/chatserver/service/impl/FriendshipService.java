@@ -73,8 +73,13 @@ public class FriendshipService implements IFriendshipService {
 
     @Override
     public boolean areFriends(Long userId1, Long userId2) {
-        Optional<Friendship> friendship = friendshipRepository.findByUserIdAndFriendId(userId1, userId2);
-        return friendship.isPresent() && "ACCEPTED".equals(friendship.get().getStatus());
+        // Kiểm tra cả 2 chiều của mối quan hệ bạn bè
+        Optional<Friendship> friendship1 = friendshipRepository.findByUserIdAndFriendId(userId1, userId2);
+        Optional<Friendship> friendship2 = friendshipRepository.findByUserIdAndFriendId(userId2, userId1);
+
+        // Trả về true nếu một trong hai chiều tồn tại và có status là ACCEPTED
+        return (friendship1.isPresent() && "ACCEPTED".equals(friendship1.get().getStatus())) ||
+                (friendship2.isPresent() && "ACCEPTED".equals(friendship2.get().getStatus()));
     }
 
     @Override

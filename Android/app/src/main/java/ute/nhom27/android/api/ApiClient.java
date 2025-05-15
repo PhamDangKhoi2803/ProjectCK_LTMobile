@@ -1,6 +1,7 @@
 package ute.nhom27.android.api;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -30,20 +31,53 @@ public class ApiClient {
         return noAuthRetrofit;
     }
 
+    //    public static Retrofit getAuthClient(Context context) {
+//        OkHttpClient client = new OkHttpClient.Builder()
+//                .addInterceptor(chain -> {
+//                    String token = new SharedPrefManager(context).getToken();
+//                    Request request = chain.request().newBuilder()
+//                            .addHeader("Authorization", "Bearer " + token)
+//                            .build();
+//                    return chain.proceed(request);
+//                }).build();
+//
+//        return new Retrofit.Builder()
+//                .baseUrl(BASE_URL)
+//                .client(client)
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//    }
     public static Retrofit getAuthClient(Context context) {
-        OkHttpClient client = new OkHttpClient.Builder()
-                .addInterceptor(chain -> {
-                    String token = new SharedPrefManager(context).getToken();
-                    Request request = chain.request().newBuilder()
-                            .addHeader("Authorization", "Bearer " + token)
-                            .build();
-                    return chain.proceed(request);
-                }).build();
+        if (authRetrofit == null) {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(chain -> {
+                        String token = new SharedPrefManager(context).getToken();
+                        Log.d("ApiClient", "Token: " + token);
 
-        return new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .client(client)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+                        Request original = chain.request();
+                        Log.d("ApiClient", "Request URL: " + original.url());
+                        Log.d("ApiClient", "Request method: " + original.method());
+
+                        Request request = original.newBuilder()
+                                .addHeader("Authorization", "Bearer " + token)
+                                .build();
+
+                        Log.d("ApiClient", "Request headers: " + request.headers());
+
+                        Response response = chain.proceed(request);
+                        Log.d("ApiClient", "Response code: " + response.code());
+                        Log.d("ApiClient", "Response headers: " + response.headers());
+
+                        return response;
+                    })
+                    .build();
+
+            authRetrofit = new Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .client(client)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return authRetrofit;
     }
 }

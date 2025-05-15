@@ -1,5 +1,6 @@
 package ute.nhom27.chatserver.service;
 
+import ute.nhom27.chatserver.dto.MessageDTO;
 import ute.nhom27.chatserver.dto.MessageListDTO;
 import ute.nhom27.chatserver.entity.ChatMessage;
 import ute.nhom27.chatserver.entity.GroupMessage;
@@ -7,7 +8,7 @@ import ute.nhom27.chatserver.entity.GroupMessage;
 import java.util.List;
 
 public interface IMessageService {
-    List<ChatMessage> getPrivateMessages(Long user1Id, Long user2Id);
+    List<MessageDTO> getPrivateMessages(Long user1Id, Long user2Id);
 
     List<GroupMessage> getGroupMessages(Long groupId);
 

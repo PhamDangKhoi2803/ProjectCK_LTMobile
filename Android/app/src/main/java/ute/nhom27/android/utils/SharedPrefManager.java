@@ -21,6 +21,7 @@ public class SharedPrefManager {
         editor.putString("email", user.getEmail());
         editor.putString("phone", user.getPhone());
         editor.putString("themePreference", user.getThemePreference() != null ? user.getThemePreference() : "light");
+        editor.putString("avatarURL", user.getAvatarURL());
         editor.apply();
     }
 

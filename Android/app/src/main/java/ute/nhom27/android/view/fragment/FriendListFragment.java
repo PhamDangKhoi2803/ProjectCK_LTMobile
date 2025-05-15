@@ -1,6 +1,7 @@
 package ute.nhom27.android.view.fragment;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,6 +31,7 @@ import ute.nhom27.android.model.response.UserResponse;
 import ute.nhom27.android.network.OnMessageReceivedListener;
 import ute.nhom27.android.network.WebSocketClient;
 import ute.nhom27.android.utils.SharedPrefManager;
+import ute.nhom27.android.view.activities.ChatActivity;
 
 public class FriendListFragment extends Fragment implements OnMessageReceivedListener {
 
@@ -117,10 +119,28 @@ public class FriendListFragment extends Fragment implements OnMessageReceivedLis
         apiService.getFriends(userId).enqueue(new Callback<List<UserResponse>>() {
             @Override
             public void onResponse(Call<List<UserResponse>> call, Response<List<UserResponse>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    friendList.clear();
-                    friendList.addAll(response.body());
-                    adapter.notifyDataSetChanged();
+                if (response.isSuccessful()) {
+                    Log.e("FriendList", "Body: " + response.body());
+                    List<UserResponse> friends = response.body();
+                    if (friends == null) {
+                        friends = new ArrayList<>();
+                    }
+                    adapter = new FriendAdapter(friends, FriendAdapter.TYPE_FRIEND_LIST);
+                    // Set các listener
+                    adapter.setOnMessageClickListener(friend -> {
+                        Toast.makeText(getContext(), "Đã chọn: " + friend.getUsername(), Toast.LENGTH_SHORT).show();
+                        // Log để kiểm tra giá trị
+                        Log.d("FriendListFragment", "Friend ID: " + friend.getId());
+                        Log.d("FriendListFragment", "Friend Name: " + friend.getUsername());
+                        Log.d("FriendListFragment", "Friend Avatar: " + friend.getAvatarURL());
+
+                        Intent intent = new Intent(getActivity(), ChatActivity.class);
+                        intent.putExtra("receiverId", friend.getId());
+                        intent.putExtra("receiverName", friend.getUsername());
+                        intent.putExtra("receiverAvatar", friend.getAvatarURL());
+                        startActivity(intent);
+                    });
+                    recyclerView.setAdapter(adapter);
                 } else {
                     Toast.makeText(getContext(), "Lỗi khi lấy danh sách bạn bè", Toast.LENGTH_SHORT).show();
                 }

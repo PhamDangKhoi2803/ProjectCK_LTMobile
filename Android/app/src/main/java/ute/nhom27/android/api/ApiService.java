@@ -21,6 +21,7 @@ import ute.nhom27.android.model.GroupMember;
 import ute.nhom27.android.model.TypingStatus;
 import ute.nhom27.android.model.User;
 import ute.nhom27.android.model.response.MessageListResponse;
+import ute.nhom27.android.model.response.MessageResponse;
 import ute.nhom27.android.model.response.UserResponse;
 
 public interface ApiService {
@@ -36,6 +37,8 @@ public interface ApiService {
     @GET("users/{userId}/messages")
     Call<List<ChatMessage>> getMessages(@Path("userId") Long userId);
 
+    @POST("messages")
+    Call<ChatMessage> sendMessage(@Body ChatMessage message);
     @GET("api/friends/{userId}/list")
     Call<List<UserResponse>> getFriends(@Path("userId") Long userId);
 
@@ -53,7 +56,11 @@ public interface ApiService {
             @Query("receiverId") Long receiverId,
             @Query("senderId") Long senderId
     );
-
+    @GET("api/messages/private")
+    Call<List<MessageResponse>> getPrivateMessages(
+            @Query("userId1") Long userId1,
+            @Query("userId2") Long userId2
+    );
     @GET("api/friends/{userId}/sent-requests")
     Call<List<UserResponse>> getSentFriendRequests(@Path("userId") Long userId);
 

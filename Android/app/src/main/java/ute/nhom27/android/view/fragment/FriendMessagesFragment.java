@@ -1,5 +1,6 @@
 package ute.nhom27.android.view.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +26,7 @@ import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.response.MessageListResponse;
 import ute.nhom27.android.utils.SharedPrefManager;
+import ute.nhom27.android.view.activities.ChatActivity;
 
 public class FriendMessagesFragment extends Fragment {
     private RecyclerView recyclerView;
@@ -55,12 +57,18 @@ public class FriendMessagesFragment extends Fragment {
     private void fetchFriendMessages() {
         SharedPrefManager sharedPrefManager = new SharedPrefManager(requireContext());
         Long userId = sharedPrefManager.getUser().getId();
+
+        Log.d("MessageListFragment", "Fetching messages for userId: " + userId);
+
         apiService.getFriendLastMessages(userId).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<List<MessageListResponse>> call, Response<List<MessageListResponse>> response) {
+                Log.d("MessageListFragment", "Response code: " + response.code());
+
                 if (response.isSuccessful()) {
                     List<MessageListResponse> list = response.body();
                     if (list == null) {
+                        Log.d("MessageListFragment", "Response body is null");
                         list = new ArrayList<>();
                     }
                     adapter = new MessageListAdapter(list, getContext());

@@ -1,5 +1,6 @@
 package ute.nhom27.android.view.fragment;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +16,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import ute.nhom27.android.R;
 import ute.nhom27.android.adapter.ViewPagerAdapter;
+import ute.nhom27.android.view.activities.ChatActivity;
 
 public class MessageListFragment extends Fragment {
 
@@ -28,14 +30,14 @@ public class MessageListFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                           Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_message_list, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        
+
         viewPager = view.findViewById(R.id.view_pager);
         tabLayout = view.findViewById(R.id.tab_layout);
 
@@ -52,7 +54,7 @@ public class MessageListFragment extends Fragment {
 
     private void setupTabLayout() {
         new TabLayoutMediator(tabLayout, viewPager,
-            (tab, position) -> tab.setText(viewPagerAdapter.getTitle(position))
+                (tab, position) -> tab.setText(viewPagerAdapter.getTitle(position))
         ).attach();
     }
 }

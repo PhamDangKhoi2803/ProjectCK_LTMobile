@@ -2,6 +2,7 @@ package ute.nhom27.chatserver.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ute.nhom27.chatserver.dto.MessageDTO;
 import ute.nhom27.chatserver.dto.MessageListDTO;
 import ute.nhom27.chatserver.entity.ChatGroup;
 import ute.nhom27.chatserver.entity.ChatMessage;
@@ -16,6 +17,7 @@ import ute.nhom27.chatserver.service.IMessageService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,8 +36,19 @@ public class MessageService implements IMessageService {
     private ChatGroupRepository chatGroupRepository;
 
     @Override
-    public List<ChatMessage> getPrivateMessages(Long user1Id, Long user2Id) {
-        return chatMessageRepository.findAllMessagesBetweenUsers(user1Id, user2Id);
+    public List<MessageDTO> getPrivateMessages(Long user1Id, Long user2Id) {
+        List<ChatMessage> messages = chatMessageRepository.findAllMessagesBetweenUsers(user1Id, user2Id);
+
+        return messages.stream().map(message -> new MessageDTO(
+                        message.getSender().getId(),
+                        message.getReceiver().getId(),
+                        message.getContent(),
+                        message.getMediaUrl(),
+                        message.getMediaType(),
+                        message.getTimestamp(),
+                        message.getStatus(),
+                        false  // isGroup = false vì đây là tin nhắn cá nhân
+                )).collect(Collectors.toList());
     }
 
     @Override
@@ -98,14 +111,37 @@ public class MessageService implements IMessageService {
 
         return friends.stream().map(friend -> {
             // Lấy tin nhắn gần nhất giữa userId và friend
-            ChatMessage lastMessage = chatMessageRepository.findTopByUsersOrderByTimestampDesc(userId, friend.getId());
+            Optional<ChatMessage> lastMessageOpt = chatMessageRepository.findLatestMessageBetweenUsers(userId, friend.getId());
 
             // Đếm số tin nhắn chưa đọc
             int unreadCount = chatMessageRepository.countUnreadMessages(userId, friend.getId());
 
-            // Nếu không có tin nhắn, trả về "Chưa có tin nhắn"
-            String lastMessageContent = lastMessage != null ? lastMessage.getContent() : "Chưa có tin nhắn";
-            String lastMessageTime = lastMessage != null ? String.valueOf(lastMessage.getTimestamp()) : null;
+            // Xử lý nội dung tin nhắn cuối cùng
+            String lastMessageContent;
+            String lastMessageTime;
+
+            if (lastMessageOpt.isPresent()) {
+                ChatMessage lastMessage = lastMessageOpt.get();
+
+                // Xử lý nội dung tin nhắn dựa vào loại media
+                if (lastMessage.getMediaUrl() != null && !lastMessage.getMediaUrl().isEmpty()) {
+                    if ("IMAGE".equals(lastMessage.getMediaType())) {
+                        lastMessageContent = "Đã gửi một hình ảnh";
+                    } else if ("VIDEO".equals(lastMessage.getMediaType())) {
+                        lastMessageContent = "Đã gửi một video";
+                    } else {
+                        lastMessageContent = lastMessage.getContent();
+                    }
+                } else {
+                    lastMessageContent = lastMessage.getContent();
+                }
+
+                // Xử lý timestamp
+                lastMessageTime = String.valueOf(lastMessage.getTimestamp());
+            } else {
+                lastMessageContent = "Chưa có tin nhắn";
+                lastMessageTime = null;
+            }
 
             return new MessageListDTO(
                     friend.getId(),

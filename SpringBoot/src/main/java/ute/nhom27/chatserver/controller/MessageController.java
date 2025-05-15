@@ -35,11 +35,26 @@ public class MessageController {
     private NotificationController notificationController;
 
     @GetMapping("/private")
-    public List<ChatMessage> getPrivateMessages(
+    public ResponseEntity<?> getPrivateMessages(
             @RequestParam Long userId1,
             @RequestParam Long userId2
     ) {
-        return messageService.getPrivateMessages(userId1, userId2);
+        try {
+
+            // Kiểm tra quan hệ bạn bè
+            if (!friendshipService.areFriends(userId1, userId2)) {
+                return ResponseEntity.badRequest().body("Chỉ có thể xem tin nhắn của bạn bè");
+            }
+
+            // Lấy tin nhắn từ service
+            List<MessageDTO> messages = messageService.getPrivateMessages(userId1, userId2);
+
+            // Trả về response thành công
+            return ResponseEntity.ok(messages);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi server: " + e.getMessage());
+        }
     }
 
     @GetMapping("/group/{groupId}")

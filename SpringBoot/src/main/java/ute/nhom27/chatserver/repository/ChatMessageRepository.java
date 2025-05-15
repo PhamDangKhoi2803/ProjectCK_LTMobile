@@ -24,8 +24,12 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     @Query("SELECT m FROM ChatMessage m WHERE " +
             "(m.sender.id = :userId1 AND m.receiver.id = :userId2) OR " +
             "(m.sender.id = :userId2 AND m.receiver.id = :userId1) " +
-            "ORDER BY m.timestamp DESC")
-    ChatMessage findTopByUsersOrderByTimestampDesc(Long userId1, Long userId2);
+            "ORDER BY m.timestamp DESC " +
+            "LIMIT 1")
+    Optional<ChatMessage> findLatestMessageBetweenUsers(
+            @Param("userId1") Long userId1,
+            @Param("userId2") Long userId2
+    );
 
     @Query("SELECT COUNT(m) FROM ChatMessage m " +
             "WHERE ((m.sender.id = :friendId AND m.receiver.id = :userId) OR " +
