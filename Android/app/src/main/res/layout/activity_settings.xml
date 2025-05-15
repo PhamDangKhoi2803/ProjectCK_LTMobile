@@ -22,8 +22,8 @@
 
     <Spinner
         android:id="@+id/spinnerTheme"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_width="378dp"
+        android:layout_height="53dp" />
 
     <Button
         android:id="@+id/btnSaveTheme"
@@ -31,4 +31,21 @@
         android:layout_height="wrap_content"
         android:text="Lưu"
         android:layout_marginTop="16dp" />
+
+    <!-- Nút đăng xuất -->
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Đăng xuất"
+        android:textSize="18sp" />
+
+    <Button
+        android:id="@+id/btnLogout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Đăng xuất" />
 </LinearLayout>

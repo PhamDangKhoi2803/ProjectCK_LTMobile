@@ -38,6 +38,8 @@ public class SettingsFragment extends Fragment {
     private ApiService apiService;
     private ThemeChange themeChange;
 
+    private Button btnLogout;
+
     public SettingsFragment() {
         // Required empty public constructor
     }
@@ -72,6 +74,7 @@ public class SettingsFragment extends Fragment {
         // Khởi tạo các view
         spinnerTheme = view.findViewById(R.id.spinnerTheme);
         btnSaveTheme = view.findViewById(R.id.btnSaveTheme);
+        btnLogout = view.findViewById(R.id.btnLogout);
 
         // Khởi tạo SharedPrefManager và ApiService
         if (getContext() != null) {
@@ -95,6 +98,7 @@ public class SettingsFragment extends Fragment {
 
         // Xử lý sự kiện nút Save Theme
         btnSaveTheme.setOnClickListener(v -> saveTheme());
+        btnLogout.setOnClickListener(v -> logout());
     }
 
     private void saveTheme() {
@@ -141,5 +145,23 @@ public class SettingsFragment extends Fragment {
                 Toast.makeText(getContext(), "Lỗi kết nối: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void logout() {
+        // Xóa dữ liệu phiên đăng nhập
+        sharedPrefManager.clear();
+
+        // Chuyển về LoginActivity và xóa stack Activity hiện tại
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+
+        // Đóng MainActivity
+        if (getActivity() != null) {
+            getActivity().finish();
+        }
+
+        // Hiển thị thông báo đăng xuất thành công
+        Toast.makeText(requireContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show();
     }
 }
