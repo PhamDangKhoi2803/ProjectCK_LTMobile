@@ -1,10 +1,24 @@
 package ute.nhom27.android.model;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class ChatGroup {
+    @SerializedName("id")
     private Long id;
+
+    @SerializedName("name")
     private String name;
+
+    @SerializedName("ownerId")
+    private Long ownerId;
+
+    @SerializedName("avatarUrl")
+    private String avatarUrl;
+
+    @SerializedName("createdAt")
+    private String createdAt;
+
     private User owner;
     private List<GroupMember> members;
     // Getters, setters, constructor
@@ -26,6 +40,30 @@ public class ChatGroup {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
     }
 
     public User getOwner() {

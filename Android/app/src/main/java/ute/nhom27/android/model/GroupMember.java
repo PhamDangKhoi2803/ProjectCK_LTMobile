@@ -1,15 +1,22 @@
 package ute.nhom27.android.model;
 
-public class GroupMember {
-    private Long id;
-    private User user;
-    private ChatGroup chatGroup;
-    private String role; // admin/member
-    private String joinedAt;
-    // Getters, setters, constructor
+import com.google.gson.annotations.SerializedName;
 
-    public GroupMember() {
-    }
+public class GroupMember {
+    @SerializedName("id")
+    private Long id;
+
+    @SerializedName("groupId")
+    private Long groupId;
+
+    @SerializedName("userId")
+    private Long userId;
+
+    @SerializedName("joinedAt")
+    private String joinedAt;
+
+    @SerializedName("user")
+    private User user;
 
     public Long getId() {
         return id;
@@ -19,28 +26,28 @@ public class GroupMember {
         this.id = id;
     }
 
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
     public String getJoinedAt() {
         return joinedAt;
     }
 
     public void setJoinedAt(String joinedAt) {
         this.joinedAt = joinedAt;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public ChatGroup getChatGroup() {
-        return chatGroup;
-    }
-
-    public void setChatGroup(ChatGroup chatGroup) {
-        this.chatGroup = chatGroup;
     }
 
     public User getUser() {

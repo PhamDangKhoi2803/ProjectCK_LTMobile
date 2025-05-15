@@ -1,6 +1,7 @@
 package ute.nhom27.android.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,107 +11,92 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.List;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import ute.nhom27.android.R;
 import ute.nhom27.android.model.response.MessageListResponse;
+import ute.nhom27.android.utils.DateTimeUtils;
 
 public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.ViewHolder> {
 
-    private List<MessageListResponse> friendList;
+    private List<MessageListResponse> messageList;
     private Context context;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public MessageListAdapter(List<MessageListResponse> friendList, Context context) {
-        this.friendList = friendList;
+    public MessageListAdapter(List<MessageListResponse> messageList, Context context) {
+        this.messageList = messageList;
         this.context = context;
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView avatar;
-        TextView chatName, lastMessage, time, status;
-
-        public ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            avatar = itemView.findViewById(R.id.avatar);
-            chatName = itemView.findViewById(R.id.chat_name);
-            lastMessage = itemView.findViewById(R.id.last_message);
-            time = itemView.findViewById(R.id.time);
-            status = itemView.findViewById(R.id.message_status);
-        }
     }
 
     @NonNull
     @Override
-    public MessageListAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_chat, parent, false);
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_message_list, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MessageListAdapter.ViewHolder holder, int position) {
-        MessageListResponse friend = friendList.get(position);
-        holder.chatName.setText(friend.getFriendName());
-        holder.lastMessage.setText(friend.getLastMessage());
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        MessageListResponse message = messageList.get(position);
+
+        holder.tvName.setText(message.getName());
+        holder.tvLastMessage.setText(message.getLastMessage());
         
-        // Format thời gian
-        if (friend.getTimestamp() != null) {
-            holder.time.setText(getFormattedTimeAgo(friend.getTimestamp()));
+        // Hiển thị thời gian
+        if (message.getLastMessageTime() != null) {
+            holder.tvTime.setText(DateTimeUtils.getRelativeTimeSpan(message.getLastMessageTime()));
+            holder.tvTime.setVisibility(View.VISIBLE);
         } else {
-            holder.time.setText("");
-        }
-        
-        // Ẩn status nếu chưa có tin nhắn
-        if ("Chưa có tin nhắn".equals(friend.getLastMessage())) {
-            holder.status.setVisibility(View.GONE);
-            holder.time.setVisibility(View.GONE);
-        } else {
-            holder.status.setVisibility(View.VISIBLE);
-            holder.time.setVisibility(View.VISIBLE);
-            holder.status.setText(Boolean.TRUE.equals(friend.getIsSeen()) ? "Đã xem" : "Đã nhận");
+            holder.tvTime.setVisibility(View.GONE);
         }
 
-        if (friend.getAvatarUrl() != null) {
+        // Hiển thị số tin nhắn chưa đọc
+        if (message.getUnreadCount() > 0) {
+            holder.tvUnreadCount.setVisibility(View.VISIBLE);
+            holder.tvUnreadCount.setText(String.valueOf(message.getUnreadCount()));
+        } else {
+            holder.tvUnreadCount.setVisibility(View.GONE);
+        }
+
+        // Hiển thị avatar
+        if (message.getAvatar() != null && !message.getAvatar().isEmpty()) {
             Glide.with(context)
-                    .load(friend.getAvatarUrl())
-                    .placeholder(R.drawable.default_avatar)
-                    .into(holder.avatar);
+                    .load(message.getAvatar())
+                    .placeholder(message.isGroup() ? R.drawable.default_avatar : R.drawable.default_avatar)
+                    .error(message.isGroup() ? R.drawable.default_avatar : R.drawable.default_avatar)
+                    .circleCrop()
+                    .into(holder.ivAvatar);
         } else {
-            Glide.with(context)
-                    .load(R.drawable.default_avatar)
-                    .into(holder.avatar);
+            holder.ivAvatar.setImageResource(message.isGroup() ? R.drawable.default_avatar : R.drawable.default_avatar);
         }
-    }
 
-    private String getFormattedTimeAgo(String timestamp) {
-        try {
-            LocalDateTime messageTime = LocalDateTime.parse(timestamp, formatter);
-            LocalDateTime now = LocalDateTime.now();
-            Duration duration = Duration.between(messageTime, now);
-
-            long hours = duration.toHours();
-            long days = duration.toDays();
-
-            if (days > 0) {
-                return days + " ngày trước";
-            } else if (hours > 0) {
-                return hours + " giờ trước";
-            } else {
-                long minutes = duration.toMinutes();
-                if (minutes <= 1) {
-                    return "Vừa xong";
-                } else {
-                    return minutes + " phút trước";
-                }
-            }
-        } catch (Exception e) {
-            return "";
-        }
+//        // Xử lý sự kiện click
+//        holder.itemView.setOnClickListener(v -> {
+//            Intent intent = new Intent(context, ChatActivity.class);
+//            intent.putExtra("chatId", message.getId());
+//            intent.putExtra("chatName", message.getName());
+//            intent.putExtra("isGroup", message.isGroup());
+//            context.startActivity(intent);
+//        });
     }
 
     @Override
     public int getItemCount() {
-        return friendList.size();
+        return messageList.size();
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView ivAvatar;
+        TextView tvName;
+        TextView tvLastMessage;
+        TextView tvTime;
+        TextView tvUnreadCount;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            ivAvatar = itemView.findViewById(R.id.iv_avatar);
+            tvName = itemView.findViewById(R.id.tv_name);
+            tvLastMessage = itemView.findViewById(R.id.tv_last_message);
+            tvTime = itemView.findViewById(R.id.tv_time);
+            tvUnreadCount = itemView.findViewById(R.id.tv_unread_count);
+        }
     }
 }

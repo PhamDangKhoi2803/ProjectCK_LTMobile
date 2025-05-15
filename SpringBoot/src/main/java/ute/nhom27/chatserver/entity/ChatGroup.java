@@ -18,6 +18,9 @@ public class ChatGroup {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
     @JsonIgnoreProperties("friendships") // để tránh vòng lặp nếu User có quan hệ ngược
@@ -41,6 +44,14 @@ public class ChatGroup {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
     }
 
     public User getOwner() {

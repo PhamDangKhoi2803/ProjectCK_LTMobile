@@ -25,13 +25,13 @@ public class GroupMessage {
 
     private String mediaUrl;
 
-    private String mediaType; // ví dụ: "image", "video", v.v.
+    private String mediaType;
 
     @Column(nullable = false)
-    private String status = "SENT"; // Có thể là "SENT", "SEEN", v.v.
+    private String status = "SENT";
 
     @Column(nullable = false)
-    private String timestamp; // ISO 8601 string như trên Android
+    private String timestamp;
 
     @Column(nullable = false)
     private boolean isDeletedForUser = false;
@@ -39,4 +39,83 @@ public class GroupMessage {
     @Column(nullable = false)
     private boolean isRevoked = false;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getSender() {
+        return sender;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
+
+    public ChatGroup getChatGroup() {
+        return chatGroup;
+    }
+
+    public void setChatGroup(ChatGroup chatGroup) {
+        this.chatGroup = chatGroup;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getMediaUrl() {
+        return mediaUrl;
+    }
+
+    public void setMediaUrl(String mediaUrl) {
+        this.mediaUrl = mediaUrl;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.mediaType = mediaType;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public boolean isDeletedForUser() {
+        return isDeletedForUser;
+    }
+
+    public void setDeletedForUser(boolean deletedForUser) {
+        isDeletedForUser = deletedForUser;
+    }
+
+    public boolean isRevoked() {
+        return isRevoked;
+    }
+
+    public void setRevoked(boolean revoked) {
+        isRevoked = revoked;
+    }
 }

@@ -53,6 +53,12 @@ public class MessageController {
         return ResponseEntity.ok(messages);
     }
 
+    @GetMapping("/group-last-messages/{userId}")
+    public ResponseEntity<List<MessageListDTO>> getGroupLastMessages(@PathVariable Long userId) {
+        List<MessageListDTO> messages = messageService.getGroupLastMessages(userId);
+        return ResponseEntity.ok(messages);
+    }
+
     @PostMapping("/send")
     public ResponseEntity<?> sendPrivateMessage(
             @RequestBody MessageDTO messageDTO
@@ -111,4 +117,55 @@ public class MessageController {
         return ResponseEntity.ok("Tin nhắn đã được gửi");
     }
 
+    @PostMapping("/group/send")
+    public ResponseEntity<?> sendGroupMessage(@RequestBody MessageDTO messageDTO) {
+        Long senderId = messageDTO.getSenderId();
+        Long groupId = messageDTO.getReceiverId();
+        String content = messageDTO.getContent();
+        String mediaUrl = messageDTO.getMediaUrl();
+        String mediaType = messageDTO.getMediaType();
+
+        // Kiểm tra người gửi có tồn tại
+        User sender = userService.getUserById(senderId).orElse(null);
+        if (sender == null) {
+            return ResponseEntity.badRequest().body("Người gửi không tồn tại");
+        }
+
+        // Kiểm tra người gửi có trong nhóm không
+        if (!messageService.isUserInGroup(senderId, groupId)) {
+            return ResponseEntity.badRequest().body("Bạn không phải thành viên của nhóm này");
+        }
+
+        // Kiểm tra dữ liệu đầu vào
+        if ((content == null || content.trim().isEmpty()) && mediaUrl == null) {
+            return ResponseEntity.badRequest().body("Tin nhắn phải có nội dung hoặc media");
+        }
+
+        // Kiểm tra mediaType nếu có mediaUrl
+        if (mediaUrl != null && !mediaUrl.trim().isEmpty()) {
+            if (mediaType == null || !(mediaType.equals("IMAGE") || mediaType.equals("VIDEO"))) {
+                return ResponseEntity.badRequest().body("MediaType phải là 'IMAGE' hoặc 'VIDEO'");
+            }
+        }
+
+        // Tạo và lưu tin nhắn nhóm
+        GroupMessage message = new GroupMessage();
+        message.setSender(sender);
+        message.setId(groupId);
+        message.setContent(content != null ? content.trim() : "");
+        message.setMediaUrl(mediaUrl);
+        message.setMediaType(mediaType);
+        messageService.saveGroupMessage(message);
+
+        // Gửi thông báo WebSocket cho tất cả thành viên trong nhóm
+        List<Long> groupMembers = messageService.getGroupMembers(groupId);
+//        String notificationContent = content != null && !content.trim().isEmpty() ? content : (mediaType != null ? "Đã gửi một " + mediaType.toLowerCase() : "Đã gửi một media");
+//        for (Long memberId : groupMembers) {
+//            if (!memberId.equals(senderId)) {
+//                notificationController.sendGroupMessageNotification(memberId, groupId, senderId, notificationContent);
+//            }
+//        }
+
+        return ResponseEntity.ok("Tin nhắn nhóm đã được gửi");
+    }
 }

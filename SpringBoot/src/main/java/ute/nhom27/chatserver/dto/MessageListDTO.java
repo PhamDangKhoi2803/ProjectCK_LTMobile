@@ -4,41 +4,41 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Data
 @NoArgsConstructor
 public class MessageListDTO {
-    private Long friendId;
-    private String friendName;
+    private Long id;
+    private String name;
     private String avatarUrl;
     private String lastMessage;
-    private LocalDateTime timestamp;
-    private Boolean isSeen; // SENT / SEEN
+    private String lastMessageTime;
+    private int unreadCount;
+    private boolean isGroup;
 
-    public MessageListDTO(Long friendId, String friendName, String avatarUrl, String lastMessage, LocalDateTime timestamp, Boolean isSeen) {
-        this.friendId = friendId;
-        this.friendName = friendName;
+    public MessageListDTO(Long id, String name, String avatarUrl, String lastMessage, String lastMessageTime, int unreadCount, boolean isGroup) {
+        this.id = id;
+        this.name = name;
         this.avatarUrl = avatarUrl;
         this.lastMessage = lastMessage;
-        this.timestamp = timestamp;
-        this.isSeen = isSeen;
+        this.lastMessageTime = lastMessageTime;
+        this.unreadCount = unreadCount;
+        this.isGroup = isGroup;
     }
 
-    public Long getFriendId() {
-        return friendId;
+    public Long getId() {
+        return id;
     }
 
-    public void setFriendId(Long friendId) {
-        this.friendId = friendId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public String getFriendName() {
-        return friendName;
+    public String getName() {
+        return name;
     }
 
-    public void setFriendName(String friendName) {
-        this.friendName = friendName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getAvatarUrl() {
@@ -57,19 +57,27 @@ public class MessageListDTO {
         this.lastMessage = lastMessage;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public String getLastMessageTime() {
+        return lastMessageTime;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    public void setLastMessageTime(String lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
     }
 
-    public Boolean getSeen() {
-        return isSeen;
+    public int getUnreadCount() {
+        return unreadCount;
     }
 
-    public void setSeen(Boolean seen) {
-        isSeen = seen;
+    public void setUnreadCount(int unreadCount) {
+        this.unreadCount = unreadCount;
+    }
+
+    public boolean isGroup() {
+        return isGroup;
+    }
+
+    public void setGroup(boolean group) {
+        isGroup = group;
     }
 }

@@ -1,37 +1,26 @@
 package ute.nhom27.android.view.fragment;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import ute.nhom27.android.R;
-import ute.nhom27.android.adapter.MessageListAdapter;
-import ute.nhom27.android.api.ApiClient;
-import ute.nhom27.android.api.ApiService;
-import ute.nhom27.android.model.response.MessageListResponse;
-import ute.nhom27.android.utils.SharedPrefManager;
+import ute.nhom27.android.adapter.ViewPagerAdapter;
 
 public class MessageListFragment extends Fragment {
 
-    private RecyclerView recyclerView;
-    private MessageListAdapter adapter;
-    private ApiService apiService;
+    private ViewPager2 viewPager;
+    private TabLayout tabLayout;
+    private ViewPagerAdapter viewPagerAdapter;
 
     public MessageListFragment() {
         // Required empty public constructor
@@ -39,44 +28,31 @@ public class MessageListFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+                           Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_message_list, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        recyclerView = view.findViewById(R.id.recycler_view_chats);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        
+        viewPager = view.findViewById(R.id.view_pager);
+        tabLayout = view.findViewById(R.id.tab_layout);
 
-        apiService = ApiClient.getAuthClient(requireContext()).create(ApiService.class);
-
-        fetchFriendMessages();
+        setupViewPager();
+        setupTabLayout();
     }
 
-    private void fetchFriendMessages() {
-        SharedPrefManager sharedPrefManager = new SharedPrefManager(requireContext());
-        Long userId = sharedPrefManager.getUser().getId();
-        apiService.getFriendLastMessages(userId).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<List<MessageListResponse>> call, Response<List<MessageListResponse>> response) {
-                if (response.isSuccessful()) {
-                    List<MessageListResponse> list = response.body();
-                    if (list == null) {
-                        list = new ArrayList<>();
-                    }
-                    adapter = new MessageListAdapter(list, getContext());
-                    recyclerView.setAdapter(adapter);
-                } else {
-                    Toast.makeText(getContext(), "Lỗi dữ liệu", Toast.LENGTH_SHORT).show();
-                }
-            }
+    private void setupViewPager() {
+        viewPagerAdapter = new ViewPagerAdapter(this);
+        viewPagerAdapter.addFragment(new FriendMessagesFragment(), "Bạn bè");
+        viewPagerAdapter.addFragment(new GroupMessagesFragment(), "Nhóm");
+        viewPager.setAdapter(viewPagerAdapter);
+    }
 
-            @Override
-            public void onFailure(@NonNull Call<List<MessageListResponse>> call, Throwable t) {
-                Log.e("API_ERROR", t.getMessage());
-                Toast.makeText(getContext(), "Không thể kết nối server", Toast.LENGTH_SHORT).show();
-            }
-        });
+    private void setupTabLayout() {
+        new TabLayoutMediator(tabLayout, viewPager,
+            (tab, position) -> tab.setText(viewPagerAdapter.getTitle(position))
+        ).attach();
     }
 }

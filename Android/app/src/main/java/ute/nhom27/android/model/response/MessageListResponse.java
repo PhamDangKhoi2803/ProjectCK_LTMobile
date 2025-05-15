@@ -1,30 +1,83 @@
 package ute.nhom27.android.model.response;
 
+import com.google.gson.annotations.SerializedName;
+
 public class MessageListResponse {
+    @SerializedName("id")
+    private Long id;
 
-    private Long friendId;
-    private String friendName;
-    private String avatarUrl;
+    @SerializedName("name")
+    private String name;
+
+    @SerializedName("avatar")
+    private String avatar;
+
+    @SerializedName("lastMessage")
     private String lastMessage;
-    private String timestamp; // ISO 8601 dạng String
-    private Boolean isSeen;
 
-    // Getters và setters
-    public Long getFriendId() { return friendId; }
-    public void setFriendId(Long friendId) { this.friendId = friendId; }
+    @SerializedName("lastMessageTime")
+    private String lastMessageTime;
 
-    public String getFriendName() { return friendName; }
-    public void setFriendName(String friendName) { this.friendName = friendName; }
+    @SerializedName("unreadCount")
+    private int unreadCount;
 
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+    @SerializedName("isGroup")
+    private boolean isGroup;
 
-    public String getLastMessage() { return lastMessage; }
-    public void setLastMessage(String lastMessage) { this.lastMessage = lastMessage; }
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
 
-    public String getTimestamp() { return timestamp; }
-    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Boolean getIsSeen() { return isSeen; }
-    public void setIsSeen(Boolean isSeen) { this.isSeen = isSeen; }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
+    }
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
+    public String getLastMessageTime() {
+        return lastMessageTime;
+    }
+
+    public void setLastMessageTime(String lastMessageTime) {
+        this.lastMessageTime = lastMessageTime;
+    }
+
+    public int getUnreadCount() {
+        return unreadCount;
+    }
+
+    public void setUnreadCount(int unreadCount) {
+        this.unreadCount = unreadCount;
+    }
+
+    public boolean isGroup() {
+        return isGroup;
+    }
+
+    public void setGroup(boolean group) {
+        isGroup = group;
+    }
 }

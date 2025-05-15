@@ -1,6 +1,7 @@
 package ute.nhom27.android.api;
 
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -16,6 +17,7 @@ import ute.nhom27.android.model.ChatGroup;
 import ute.nhom27.android.model.ChatMessage;
 import ute.nhom27.android.model.Friendship;
 import ute.nhom27.android.model.GroupMessage;
+import ute.nhom27.android.model.GroupMember;
 import ute.nhom27.android.model.TypingStatus;
 import ute.nhom27.android.model.User;
 import ute.nhom27.android.model.response.MessageListResponse;
@@ -33,9 +35,6 @@ public interface ApiService {
     
     @GET("users/{userId}/messages")
     Call<List<ChatMessage>> getMessages(@Path("userId") Long userId);
-
-    @GET("api/messages/friends/{userId}")
-    Call<List<MessageListResponse>> getFriendLastMessages(@Path("userId") Long userId);
 
     @GET("api/friends/{userId}/list")
     Call<List<UserResponse>> getFriends(@Path("userId") Long userId);
@@ -78,4 +77,31 @@ public interface ApiService {
             @Query("userId") Long userId,
             @Query("friendId") Long friendId
     );
+
+    @GET("api/messages/friends/{userId}")
+    Call<List<MessageListResponse>> getFriendLastMessages(@Path("userId") Long userId);
+
+    @GET("api/messages/group-last-messages/{userId}")
+    Call<List<MessageListResponse>> getGroupLastMessages(@Path("userId") Long userId);
+
+    @POST("api/groups/create")
+    Call<Map<String, Object>> createGroup(
+            @Query("name") String name,
+            @Query("ownerId") Long ownerId
+    );
+
+    @POST("api/groups/{groupId}/members/add")
+    Call<Map<String, String>> addGroupMember(
+            @Path("groupId") Long groupId,
+            @Query("userId") Long userId
+    );
+
+    @GET("api/groups/{groupId}/members")
+    Call<Map<String, Object>> getGroupMembers(@Path("groupId") Long groupId);
+
+    @GET("api/groups/{groupId}")
+    Call<Map<String, Object>> getGroupInfo(@Path("groupId") Long groupId);
+
+    @GET("api/groups/user/{userId}")
+    Call<Map<String, Object>> getUserGroups(@Path("userId") Long userId);
 }

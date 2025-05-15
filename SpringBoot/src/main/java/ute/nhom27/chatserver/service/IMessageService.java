@@ -11,6 +11,14 @@ public interface IMessageService {
 
     List<GroupMessage> getGroupMessages(Long groupId);
 
+    List<MessageListDTO> getGroupLastMessages(Long userId);
+
+    void saveGroupMessage(GroupMessage message);
+
+    boolean isUserInGroup(Long userId, Long groupId);
+
+    List<Long> getGroupMembers(Long groupId);
+
     List<MessageListDTO> getFriendLastMessages(Long userId);
 
     void savePrivateMessage(ChatMessage message);
