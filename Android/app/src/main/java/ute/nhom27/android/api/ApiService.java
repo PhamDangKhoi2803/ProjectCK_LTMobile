@@ -7,6 +7,7 @@ import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
@@ -111,8 +112,18 @@ public interface ApiService {
             @Query("userId") Long userId
     );
 
+    @DELETE("api/groups/{groupId}/members/remove")
+    Call<ResponseBody> removeGroupMember(
+            @Path("groupId") Long groupId,
+            @Query("userId") Long userId,
+            @Query("deleteGroup") Boolean deleteGroup
+    );
+
     @GET("api/groups/user/{userId}")
-    Call<List<GroupMemberResponse>> getGroupMembers(@Path("userId") Long userId);
+    Call<List<GroupMemberResponse>> getGroups(@Path("userId") Long userId);
+
+    @GET("api/groups/{groupId}/members")
+    Call<List<GroupMemberResponse>> getGroupMembers(@Path("groupId") Long groupId);
 
     @GET("api/groups/{groupId}")
     Call<Map<String, Object>> getGroupInfo(@Path("groupId") Long groupId);

@@ -5,27 +5,17 @@
     android:layout_height="wrap_content"
     android:padding="8dp">
 
-    <!-- Thời gian gửi tin nhắn -->
-    <TextView
-        android:id="@+id/tvTime"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="12sp"
-        android:textColor="#757575"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/messageContainer"/>
-
-    <!-- Container chứa tin nhắn -->
     <androidx.cardview.widget.CardView
         android:id="@+id/messageContainer"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="64dp"
         app:cardCornerRadius="16dp"
         app:cardBackgroundColor="#DCF8C6"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_max="wrap"
+        app:layout_constraintWidth_percent="0.75">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -33,44 +23,40 @@
             android:orientation="vertical"
             android:padding="12dp">
 
-            <!-- Nội dung tin nhắn -->
+            <TextView
+                android:id="@+id/tvSenderName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:textColor="#2196F3"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
             <TextView
                 android:id="@+id/tvMessage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#000000"
-                android:textSize="16sp"/>
+                android:textSize="16sp"
+                android:maxWidth="250dp"/>
 
             <ImageView
                 android:id="@+id/ivImage"
                 android:layout_width="200dp"
                 android:layout_height="200dp"
+                android:adjustViewBounds="true"
                 android:scaleType="centerCrop"
-                android:visibility="gone"
-                android:adjustViewBounds="true"/>
+                android:visibility="gone" />
 
-            <!-- Trạng thái tin nhắn (đã gửi/đã đọc) -->
-            <LinearLayout
+            <TextView
+                android:id="@+id/tvTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="end"
-                android:layout_marginTop="4dp">
-
-                <TextView
-                    android:id="@+id/tvStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="#757575"
-                    android:drawablePadding="4dp"/>
-
-                <ImageView
-                    android:id="@+id/ivStatus"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginStart="4dp"/>
-            </LinearLayout>
+                android:textSize="12sp"
+                android:textColor="#757575"
+                android:layout_marginTop="4dp"
+                android:layout_gravity="end"/>
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

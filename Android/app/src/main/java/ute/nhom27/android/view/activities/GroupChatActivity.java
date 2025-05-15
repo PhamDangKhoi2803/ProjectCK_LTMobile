@@ -37,14 +37,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ute.nhom27.android.BaseActivity;
 import ute.nhom27.android.R;
-import ute.nhom27.android.adapter.ChatAdapter;
 import ute.nhom27.android.adapter.GroupChatAdapter;
+import ute.nhom27.android.adapter.GroupMemberAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.request.MessageRequest;
 import ute.nhom27.android.model.response.GroupMemberResponse;
 import ute.nhom27.android.model.response.GroupMessageResponse;
-import ute.nhom27.android.model.response.MessageResponse;
 import ute.nhom27.android.model.response.NotificationResponse;
 import ute.nhom27.android.network.OnMessageReceivedListener;
 import ute.nhom27.android.network.WebSocketClient;
@@ -55,9 +54,11 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_PICK_IMAGE = 2;
 
+    private static final int POLLING_INTERVAL = 3000;
+
     private RecyclerView rvMessages;
     private EditText etMessage;
-    private ImageButton btnSend, btnAttachment, btnEmoji, btnMore;
+    private ImageButton btnSend, btnAttachment, btnMore;
     private ImageView ivGroupAvatar;
     private TextView tvGroupName, tvMemberCount;
     private LinearLayout layoutAttachment;
@@ -111,6 +112,7 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
         setupRecyclerView();
         setupClickListeners();
         loadMessages();
+        startPolling();
     }
 
     private void initViews() {
@@ -118,7 +120,6 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
         btnAttachment = findViewById(R.id.btnAttachment);
-        btnEmoji = findViewById(R.id.btnEmoji);
         btnMore = findViewById(R.id.btnMore);
         ivGroupAvatar = findViewById(R.id.ivGroupAvatar);
         tvGroupName = findViewById(R.id.tvGroupName);
@@ -151,7 +152,6 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
     private void setupToolbar() {
         findViewById(R.id.ivBack).setOnClickListener(v -> finish());
         findViewById(R.id.layoutGroupInfo).setOnClickListener(v -> showGroupInfo());
-        btnMore.setOnClickListener(v -> showGroupOptions());
     }
 
     private void setupRecyclerView() {
@@ -206,6 +206,7 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
         ImageView ivGroupAvatar = bottomSheetView.findViewById(R.id.ivGroupAvatar);
         TextView tvGroupName = bottomSheetView.findViewById(R.id.tvGroupName);
         RecyclerView rvMembers = bottomSheetView.findViewById(R.id.rvMembers);
+        com.google.android.material.button.MaterialButton btnLeaveGroup = bottomSheetView.findViewById(R.id.btnLeaveGroup);
 
         Glide.with(this)
                 .load(groupAvatar)
@@ -215,15 +216,129 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
         tvGroupName.setText(groupName);
 
         // Load and display members
-        loadGroupMembers(rvMembers);
+        apiService.getGroupMembers(groupId).enqueue(new Callback<List<GroupMemberResponse>>() {
+            @Override
+            public void onResponse(Call<List<GroupMemberResponse>> call, Response<List<GroupMemberResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<GroupMemberResponse> members = response.body();
+
+                    // Kiểm tra xem user hiện tại có phải admin không
+                    boolean isAdmin = members.stream().anyMatch(member -> member.getUserId().equals(currentUserId) && "admin".equals(member.getRole()));
+
+                    // Thay đổi text và hành động nút dựa vào vai trò
+                    if (isAdmin) {
+                        btnLeaveGroup.setText("Giải tán nhóm");
+                        btnLeaveGroup.setBackgroundTintList(getColorStateList(R.color.red));
+                    } else {
+                        btnLeaveGroup.setText("Rời nhóm");
+                    }
+
+                    // Thiết lập sự kiện cho nút
+                    btnLeaveGroup.setOnClickListener(v -> {
+                        String message = isAdmin ? "Bạn có chắc muốn giải tán nhóm này?" : "Bạn có chắc muốn rời khỏi nhóm này?";
+                        String title = isAdmin ? "Giải tán nhóm" : "Rời nhóm";
+                        String buttonText = isAdmin ? "Giải tán" : "Rời nhóm";
+
+                        // Hiển thị dialog xác nhận
+                        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(GroupChatActivity.this);
+                        builder.setTitle(title);
+                        builder.setMessage(message);
+                        builder.setPositiveButton(buttonText, (dialog, which) -> {
+                            if (isAdmin) {
+                                deleteGroup();
+                            } else {
+                                leaveGroup();
+                            }
+                            bottomSheet.dismiss();
+                        });
+                        builder.setNegativeButton("Hủy", (dialog, which) -> {
+                            dialog.dismiss();
+                        });
+                        builder.show();
+                    });
+
+                    // Cập nhật số lượng thành viên
+                    tvMemberCount.setText(members.size() + " thành viên");
+
+                    // Thiết lập RecyclerView cho danh sách thành viên
+                    rvMembers.setLayoutManager(new LinearLayoutManager(GroupChatActivity.this));
+                    GroupMemberAdapter memberAdapter = new GroupMemberAdapter(members);
+                    rvMembers.setAdapter(memberAdapter);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<GroupMemberResponse>> call, Throwable t) {
+                Log.e("GroupChat", "Error loading members", t);
+                Toast.makeText(GroupChatActivity.this,
+                        "Không thể tải danh sách thành viên. Vui lòng kiểm tra kết nối mạng",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
 
         bottomSheet.setContentView(bottomSheetView);
         bottomSheet.show();
     }
 
-    private void showGroupOptions() {
-        // TODO: Show group options menu (leave group, edit group, etc.)
+    private void deleteGroup() {
+        apiService.removeGroupMember(groupId, currentUserId, true).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(GroupChatActivity.this,
+                            "Nhóm đã được xóa",
+                            Toast.LENGTH_SHORT).show();
+                    finish(); // Quay về màn hình trước
+                } else {
+                    try {
+                        String errorBody = response.errorBody() != null ?
+                                response.errorBody().string() : "Unknown error";
+                        Log.e("GroupChat", "Server error: " + errorBody);
+                    } catch (Exception e) {
+                        Log.e("GroupChat", "Error reading error body", e);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(GroupChatActivity.this,
+                        "Không thể xóa nhóm. Kiểm tra kết nối mạng",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
+    // Thêm phương thức xử lý rời nhóm
+    private void leaveGroup() {
+        apiService.removeGroupMember(groupId, currentUserId, false).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(GroupChatActivity.this,
+                            "Đã rời khỏi nhóm", Toast.LENGTH_SHORT).show();
+                    finish(); // Đóng activity và quay lại màn hình trước
+                } else {
+                    try {
+                        String errorBody = response.errorBody() != null ?
+                                response.errorBody().string() : "Unknown error";
+                        Log.e("GroupChat", "Server error body: " + errorBody);
+                    } catch (Exception e) {
+                        Log.e("GroupChat", "Error reading error response", e);
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e("GroupChat", "Error leaving group", t);
+                Toast.makeText(GroupChatActivity.this,
+                        "Không thể rời khỏi nhóm. Vui lòng kiểm tra kết nối mạng",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     private void loadMemberCount() {
         apiService.getGroupMembers(groupId).enqueue(new Callback<List<GroupMemberResponse>>() {
@@ -232,7 +347,6 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
                 if (response.isSuccessful() && response.body() != null) {
                     int memberCount = response.body().size();
                     tvMemberCount.setText(memberCount + " thành viên");
-
                 }
             }
 
@@ -247,7 +361,35 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
     }
 
     private void loadGroupMembers(RecyclerView recyclerView) {
-        // TODO: Load and display group members
+        apiService.getGroupMembers(groupId).enqueue(new Callback<List<GroupMemberResponse>>() {
+            @Override
+            public void onResponse(Call<List<GroupMemberResponse>> call, Response<List<GroupMemberResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<GroupMemberResponse> members = response.body();
+
+                    // Cập nhật số lượng thành viên
+                    tvMemberCount.setText(members.size() + " thành viên");
+
+                    // Thiết lập RecyclerView cho danh sách thành viên
+                    recyclerView.setLayoutManager(new LinearLayoutManager(GroupChatActivity.this));
+                    GroupMemberAdapter memberAdapter = new GroupMemberAdapter(members);
+                    recyclerView.setAdapter(memberAdapter);
+                } else {
+                    Log.e("GroupChat", "Error loading members: " + response.code());
+                    Toast.makeText(GroupChatActivity.this,
+                            "Không thể tải danh sách thành viên. Mã lỗi: " + response.code(),
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<GroupMemberResponse>> call, Throwable t) {
+                Log.e("GroupChat", "Error loading members", t);
+                Toast.makeText(GroupChatActivity.this,
+                        "Không thể tải danh sách thành viên. Vui lòng kiểm tra kết nối mạng",
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadMessages() {
@@ -506,5 +648,15 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
         }
+    }
+
+    private void startPolling() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                loadMessages();
+                handler.postDelayed(this, POLLING_INTERVAL);
+            }
+        }, POLLING_INTERVAL);
     }
 }

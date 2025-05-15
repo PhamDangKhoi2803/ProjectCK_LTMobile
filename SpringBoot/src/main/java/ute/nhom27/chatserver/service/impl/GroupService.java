@@ -1,13 +1,16 @@
 package ute.nhom27.chatserver.service.impl;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ute.nhom27.chatserver.dto.GroupMemberDTO;
 import ute.nhom27.chatserver.entity.ChatGroup;
 import ute.nhom27.chatserver.entity.GroupMember;
 import ute.nhom27.chatserver.entity.User;
 import ute.nhom27.chatserver.repository.ChatGroupRepository;
 import ute.nhom27.chatserver.repository.GroupMemberRepository;
+import ute.nhom27.chatserver.repository.GroupMessageRepository;
 import ute.nhom27.chatserver.repository.UserRepository;
 import ute.nhom27.chatserver.service.IGroupService;
 
@@ -27,6 +30,12 @@ public class GroupService implements IGroupService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private GroupMessageRepository groupMessageRepository;
+
+    @Autowired
+    private ChatGroupRepository chatGroupRepository;
 
     @Override
     public ChatGroup createGroup(String name, Long ownerId) {
@@ -80,9 +89,24 @@ public class GroupService implements IGroupService {
     @Override
     public boolean removeMember(Long groupId, Long userId) {
         try {
-            groupMemberRepository.deleteByChatGroupIdAndUserId(groupId, userId);
-            return true;
+            System.out.println("Attempting to remove member: userId=" + userId + " from groupId=" + groupId);
+
+            // Kiểm tra xem member có tồn tại không
+            boolean exists = groupMemberRepository.existsByChatGroupIdAndUserId(groupId, userId);
+            System.out.println("Member exists: " + exists);
+
+            if (!exists) {
+                System.out.println("Cannot remove non-existing member");
+                return false;
+            }
+
+            int result = groupMemberRepository.deleteByChatGroupIdAndUserId(groupId, userId);
+            System.out.println("Deletion result: " + result + " records deleted");
+
+            return result > 0;
         } catch (Exception e) {
+            System.err.println("Error removing member: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
@@ -118,10 +142,11 @@ public class GroupService implements IGroupService {
     @Override
     public List<GroupMemberDTO> getGroupMembersWithInfo(Long groupId) {
         List<GroupMember> members = groupMemberRepository.findByChatGroupId(groupId);
+
         List<GroupMemberDTO> memberDTOs = new ArrayList<>();
 
         for (GroupMember member : members) {
-            User user = userRepository.findById(member.getId()).orElse(null);
+            User user = userRepository.findById(member.getUser().getId()).orElse(null);
             if (user != null) {
                 GroupMemberDTO dto = new GroupMemberDTO(
                         groupId,
@@ -135,5 +160,49 @@ public class GroupService implements IGroupService {
         }
 
         return memberDTOs;
+    }
+
+    @Override
+    @Transactional
+    public boolean deleteGroup(Long groupId) {
+        try {
+            System.out.println("Starting delete group process for groupId: " + groupId);
+
+            // Xóa tất cả tin nhắn của nhóm
+            try {
+                int messagesDeleted = groupMessageRepository.deleteAllByChatGroupId(groupId);
+                System.out.println("Deleted " + messagesDeleted + " messages for groupId: " + groupId);
+            } catch (Exception e) {
+                System.err.println("Error deleting messages: " + e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+
+            // Xóa tất cả thành viên của nhóm
+            try {
+                int membersDeleted = groupMemberRepository.deleteAllByChatGroupId(groupId);
+                System.out.println("Deleted " + membersDeleted + " members for groupId: " + groupId);
+            } catch (Exception e) {
+                System.err.println("Error deleting members: " + e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+
+            // Xóa nhóm
+            try {
+                chatGroupRepository.deleteById(groupId);
+                System.out.println("Successfully deleted group with id: " + groupId);
+            } catch (Exception e) {
+                System.err.println("Error deleting group: " + e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+
+            return true;
+        } catch (Exception e) {
+            System.err.println("Unexpected error in deleteGroup method: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }

@@ -25,4 +25,5 @@ public interface GroupMessageRepository extends JpaRepository<GroupMessage, Long
            "AND gm.isDeletedForUser = false " +
            "AND gm.isRevoked = false")
     int countUnreadMessages(@Param("groupId") Long groupId, @Param("userId") Long userId);
+    int deleteAllByChatGroupId(Long chatGroupId);
 }

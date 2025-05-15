@@ -29,11 +29,13 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     private List<MessageResponse> messageList;
     private Long currentUserId;
     private String receiverName;
+    private String receiverAvatar;
 
-    public ChatAdapter(List<MessageResponse> messageList, Long currentUserId, String receiverName) {
+    public ChatAdapter(List<MessageResponse> messageList, Long currentUserId, String receiverName, String receiverAvatar) {
         this.messageList = messageList;
         this.currentUserId = currentUserId;
         this.receiverName = receiverName;
+        this.receiverAvatar = receiverAvatar;
     }
 
     @NonNull
@@ -54,6 +56,20 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         MessageResponse message = messageList.get(position);
+
+        if (getItemViewType(position) == VIEW_TYPE_RECEIVED && holder.ivAvatar != null) {
+            // Hiển thị avatar
+            holder.ivAvatar.setVisibility(View.VISIBLE);
+            // Load avatar bằng Glide
+            Glide.with(context)
+                    .load(receiverAvatar)
+                    .placeholder(R.drawable.default_avatar)
+                    .error(R.drawable.default_avatar)
+                    .circleCrop()
+                    .into(holder.ivAvatar);
+        } else if (holder.ivAvatar != null) {
+            holder.ivAvatar.setVisibility(View.GONE);
+        }
 
         if ("IMAGE".equals(message.getMediaType())) {
             holder.messageImage.setVisibility(View.VISIBLE);
@@ -91,6 +107,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
         if (getItemViewType(position) == VIEW_TYPE_RECEIVED) {
             holder.tvSenderName.setText(receiverName);
             holder.tvSenderName.setVisibility(View.VISIBLE);
+
         }
     }
 
@@ -114,6 +131,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
         ImageView messageImage;
         TextView tvTime;
         TextView tvSenderName;
+        ImageView ivAvatar;
 
         MessageViewHolder(View itemView) {
             super(itemView);
@@ -121,6 +139,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.MessageViewHol
             messageImage = itemView.findViewById(R.id.ivImage);
             tvTime = itemView.findViewById(R.id.tvTime);
             tvSenderName = itemView.findViewById(R.id.tvSenderName);
+            ivAvatar = itemView.findViewById(R.id.ivAvatar);
         }
     }
 }

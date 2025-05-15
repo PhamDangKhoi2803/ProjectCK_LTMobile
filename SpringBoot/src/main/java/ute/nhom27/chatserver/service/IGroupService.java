@@ -23,4 +23,6 @@ public interface IGroupService {
     List<ChatGroup> getGroupsByUserId(Long userId);
 
     List<GroupMemberDTO> getGroupMembersWithInfo(Long groupId);
+
+    boolean deleteGroup(Long groupId);
 }

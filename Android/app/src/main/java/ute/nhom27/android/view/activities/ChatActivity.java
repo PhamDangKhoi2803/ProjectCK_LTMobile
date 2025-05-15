@@ -173,7 +173,7 @@ public class ChatActivity extends BaseActivity implements OnMessageReceivedListe
     }
     
     private void setupRecyclerView() {
-        chatAdapter = new ChatAdapter(messageList, currentUserId, receiverName);
+        chatAdapter = new ChatAdapter(messageList, currentUserId, receiverName, receiverAvatar);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         rvMessages.setLayoutManager(layoutManager);
@@ -428,9 +428,7 @@ public class ChatActivity extends BaseActivity implements OnMessageReceivedListe
                                             Toast.LENGTH_SHORT).show();
                                 });
                             }
-                        }
-
-                        @Override
+                        }                        @Override
                         public void onFailure(Call<ResponseBody> call, Throwable t) {
                             runOnUiThread(() -> {
                                 Toast.makeText(ChatActivity.this,

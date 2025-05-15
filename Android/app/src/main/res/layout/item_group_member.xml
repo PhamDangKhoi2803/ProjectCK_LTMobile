@@ -42,6 +42,7 @@
         android:layout_height="32dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="8dp"
-        android:src="@drawable/ic_more" />
+        android:src="@drawable/ic_more"
+        android:visibility="gone" />
 
 </LinearLayout>

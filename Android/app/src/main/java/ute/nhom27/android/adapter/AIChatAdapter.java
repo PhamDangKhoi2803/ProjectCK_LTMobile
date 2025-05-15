@@ -1,6 +1,7 @@
 package ute.nhom27.android.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -72,7 +73,7 @@ public class AIChatAdapter extends RecyclerView.Adapter<AIChatAdapter.MessageVie
             holder.tvSenderName.setText("AI Assistant");
             holder.tvSenderName.setVisibility(View.VISIBLE);
         } else {
-            holder.tvSenderName.setVisibility(View.GONE);
+//            holder.tvSenderName.setVisibility(View.GONE);
         }
 
     }

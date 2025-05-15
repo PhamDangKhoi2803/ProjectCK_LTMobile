@@ -30,7 +30,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import ute.nhom27.android.R;
 import ute.nhom27.android.adapter.AIChatAdapter;
-import ute.nhom27.android.adapter.ChatAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.api.DeepAIRequest;
@@ -66,8 +65,8 @@ public class AIChatFragment extends Fragment {
 
         initViews(view);
         setupAIInfo(view);
-        setupRecyclerView();
         setupServices();
+        setupRecyclerView();
         setupClickListeners(view);
     }
 
@@ -79,6 +78,7 @@ public class AIChatFragment extends Fragment {
         tvStatus = view.findViewById(R.id.tvStatus);
 
         // Ẩn các nút không cần thiết
+        view.findViewById(R.id.ivAvatar).setVisibility(View.GONE);
         view.findViewById(R.id.btnAttachment).setVisibility(View.GONE);
         view.findViewById(R.id.btnEmoji).setVisibility(View.GONE);
         view.findViewById(R.id.btnVoice).setVisibility(View.GONE);
