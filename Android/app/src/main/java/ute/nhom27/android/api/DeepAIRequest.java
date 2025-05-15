@@ -14,8 +14,8 @@ public class DeepAIRequest {
 
     public DeepAIRequest(String prompt) {
         this.prompt = prompt;
-        this.maxTokens = maxTokens;
-        this.temperature = temperature;
+        this.maxTokens =100;
+        this.temperature = 0.7f;
     }
 
     public String getPrompt() {

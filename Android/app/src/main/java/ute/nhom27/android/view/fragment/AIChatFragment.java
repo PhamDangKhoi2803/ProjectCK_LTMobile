@@ -128,7 +128,7 @@ public class AIChatFragment extends Fragment {
 
     private void setupRecyclerView() {
         messageList = new ArrayList<>();
-        chatAdapter = new ChatAdapter(messageList, currentUserId);
+        chatAdapter = new ChatAdapter(messageList, currentUserId, AI_NAME);
         rvMessages.setLayoutManager(new LinearLayoutManager(getContext()));
         rvMessages.setAdapter(chatAdapter);
     }
