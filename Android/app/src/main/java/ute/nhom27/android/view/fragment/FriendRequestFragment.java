@@ -16,11 +16,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import ute.nhom27.android.R;
-import ute.nhom27.android.adapter.FriendRequestAdapter;
+import ute.nhom27.android.adapter.FriendAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.model.response.NotificationResponse;
@@ -31,14 +32,14 @@ import ute.nhom27.android.utils.SharedPrefManager;
 
 public class FriendRequestFragment extends Fragment implements OnMessageReceivedListener {
 
+    private static final String TAG = "FriendRequestFragment";
     private RecyclerView recyclerView;
-    private FriendRequestAdapter adapter;
+    private FriendAdapter adapter;
     private ApiService apiService;
     private WebSocketClient webSocketClient;
     private List<UserResponse> friendRequests;
 
-    public FriendRequestFragment() {
-    }
+    public FriendRequestFragment() {}
 
     @Nullable
     @Override
@@ -53,18 +54,69 @@ public class FriendRequestFragment extends Fragment implements OnMessageReceived
 
         recyclerView = view.findViewById(R.id.recycler_view_friend_requests);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        
         friendRequests = new ArrayList<>();
-        adapter = new FriendRequestAdapter(friendRequests, getContext(), webSocketClient, user -> {
+        adapter = new FriendAdapter(friendRequests, FriendAdapter.TYPE_FRIEND_REQUEST);
+        adapter.setOnItemClickListener(user -> {
             Toast.makeText(getContext(), "Đã chọn: " + user.getUsername(), Toast.LENGTH_SHORT).show();
         });
+
+        setupFriendRequestCallbacks();
         recyclerView.setAdapter(adapter);
 
         apiService = ApiClient.getAuthClient(requireContext()).create(ApiService.class);
-
         webSocketClient = new WebSocketClient(requireContext(), this);
+        adapter.setWebSocketClient(webSocketClient);
         webSocketClient.connect();
 
         fetchFriendRequests();
+    }
+
+    private void setupFriendRequestCallbacks() {
+        SharedPrefManager sharedPrefManager = new SharedPrefManager(requireContext());
+        Long currentUserId = sharedPrefManager.getUser().getId();
+
+        adapter.setOnAcceptClickListener((user, position) -> {
+            apiService.acceptFriendRequest(currentUserId, user.getId())
+                    .enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                            if (response.isSuccessful()) {
+                                adapter.removeItem(position);
+                                adapter.sendWebSocketNotification(currentUserId, user.getId(), "FRIEND_ACCEPT");
+                                Toast.makeText(getContext(), "Đã chấp nhận lời mời kết bạn", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Lỗi khi chấp nhận", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                            Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
+
+        adapter.setOnRejectClickListener((user, position) -> {
+            apiService.rejectFriendRequest(currentUserId, user.getId())
+                    .enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                            if (response.isSuccessful()) {
+                                adapter.removeItem(position);
+                                adapter.sendWebSocketNotification(currentUserId, user.getId(), "FRIEND_REJECT");
+                                Toast.makeText(getContext(), "Đã từ chối lời mời kết bạn", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getContext(), "Lỗi khi từ chối", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                            Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+        });
     }
 
     private void fetchFriendRequests() {
@@ -84,7 +136,7 @@ public class FriendRequestFragment extends Fragment implements OnMessageReceived
 
             @Override
             public void onFailure(Call<List<UserResponse>> call, Throwable t) {
-                Log.e("FriendRequest", "Error fetching friend requests: " + t.getMessage());
+                Log.e(TAG, "Error fetching friend requests: " + t.getMessage());
                 Toast.makeText(getContext(), "Không thể kết nối server", Toast.LENGTH_SHORT).show();
             }
         });
@@ -97,33 +149,25 @@ public class FriendRequestFragment extends Fragment implements OnMessageReceived
 
     @Override
     public void onNotificationReceived(NotificationResponse notification) {
-        Log.d("FriendRequest", "Notification received: type=" + notification.getType() + ", senderId=" + notification.getSenderId() + ", usernameSender=" + notification.getUsernameSender());
+        Log.d(TAG, "Notification received: type=" + notification.getType() + 
+                   ", senderId=" + notification.getSenderId() + 
+                   ", usernameSender=" + notification.getUsernameSender());
+                   
         if ("FRIEND_REQUEST".equals(notification.getType())) {
             UserResponse user = new UserResponse();
             user.setId(notification.getSenderId());
-            user.setUsername(notification.getUsernameSender() != null ? notification.getUsernameSender() : "Unknown");
-            friendRequests.add(0, user);
+            user.setUsername(notification.getUsernameSender() != null ? 
+                           notification.getUsernameSender() : "Unknown");
+            
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> {
-                    adapter.notifyItemInserted(0);
+                    adapter.addItem(user);
                     recyclerView.scrollToPosition(0);
-                    Toast.makeText(getContext(), "Lời mời mới từ: " + user.getUsername(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), 
+                        "Lời mời mới từ: " + user.getUsername(), 
+                        Toast.LENGTH_SHORT).show();
                 });
             }
-        } else if ("FRIEND_ACCEPT".equals(notification.getType())) {
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), notification.getUsernameSender() + " đã chấp nhận lời mời của bạn", Toast.LENGTH_SHORT).show();
-                });
-            }
-        } else if ("FRIEND_REJECT".equals(notification.getType())) {
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), notification.getUsernameSender() + " đã từ chối lời mời của bạn", Toast.LENGTH_SHORT).show();
-                });
-            }
-        } else {
-            Log.d("FriendRequest", "Ignored notification type: " + notification.getType());
         }
     }
 
@@ -136,7 +180,9 @@ public class FriendRequestFragment extends Fragment implements OnMessageReceived
     public void onConnectionStatusChanged(boolean isConnected) {
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> {
-                Toast.makeText(getContext(), isConnected ? "WebSocket Connected" : "WebSocket Disconnected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), 
+                    isConnected ? "WebSocket Connected" : "WebSocket Disconnected", 
+                    Toast.LENGTH_SHORT).show();
             });
         }
     }

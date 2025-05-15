@@ -33,6 +33,7 @@ public class FriendContainerFragment extends Fragment {
         adapter = new ViewPagerAdapter(this);
         adapter.addFragment(new FriendListFragment(), "Bạn bè");
         adapter.addFragment(new FriendRequestFragment(), "Lời mời");
+        adapter.addFragment(new SentRequestFragment(), "Đã gửi & Gợi ý");
 
         viewPager.setAdapter(adapter);
 

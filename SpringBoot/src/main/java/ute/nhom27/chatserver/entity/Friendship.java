@@ -21,7 +21,7 @@ public class Friendship {
     private User friend;
 
     @Column(nullable = false)
-    private String status = "PENDING"; // Giá trị: PENDING, ACCEPTED, BLOCKED
+    private String status = "PENDING";
 
     private String nickname; // Biệt danh do người dùng đặt cho bạn bè
 

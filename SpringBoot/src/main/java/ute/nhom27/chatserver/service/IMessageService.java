@@ -12,4 +12,6 @@ public interface IMessageService {
     List<GroupMessage> getGroupMessages(Long groupId);
 
     List<MessageListDTO> getFriendLastMessages(Long userId);
+
+    void savePrivateMessage(ChatMessage message);
 }
