@@ -1,12 +1,10 @@
 package ute.nhom27.android.view.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,16 +25,16 @@ import com.bumptech.glide.Glide;
 import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton;
 import com.zegocloud.uikit.service.defines.ZegoUIKitUser;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.stream.Collectors;
 
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -45,12 +43,15 @@ import ute.nhom27.android.R;
 import ute.nhom27.android.adapter.ChatAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
-import ute.nhom27.android.model.ChatMessage;
-import ute.nhom27.android.model.User;
+import ute.nhom27.android.model.request.MessageRequest;
 import ute.nhom27.android.model.response.MessageResponse;
+import ute.nhom27.android.model.response.NotificationResponse;
+import ute.nhom27.android.network.OnMessageReceivedListener;
+import ute.nhom27.android.network.WebSocketClient;
+import ute.nhom27.android.utils.CloudinaryUtils;
 import ute.nhom27.android.utils.SharedPrefManager;
 
-public class ChatActivity extends BaseActivity {
+public class ChatActivity extends BaseActivity implements OnMessageReceivedListener {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final int REQUEST_PICK_IMAGE = 2;
     private static final int POLLING_INTERVAL = 3000; // 3 seconds
@@ -63,6 +64,12 @@ public class ChatActivity extends BaseActivity {
     private ZegoSendCallInvitationButton btnVoiceCall, btnVideoCall;
     private LinearLayout layoutAttachment;
 
+    private LinearLayout layoutPreview;
+    private ImageView ivPreview;
+    private ImageButton btnCancelPreview;
+    private Uri selectedImageUri;
+    private Bitmap capturedImage;
+
     private ChatAdapter chatAdapter;
     private List<MessageResponse> messageList;
     private Long receiverId;
@@ -71,23 +78,22 @@ public class ChatActivity extends BaseActivity {
     private ApiService apiService;
     private Handler handler;
     private SharedPrefManager prefManager;
+    private WebSocketClient webSocketClient;
+    private boolean isConnected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_message);
 
-        messageList = new ArrayList<>();
+        CloudinaryUtils.init(this);
 
+        messageList = new ArrayList<>();
 
         // Lấy dữ liệu từ Intent
         receiverId = getIntent().getLongExtra("receiverId", -1);
         receiverName = getIntent().getStringExtra("receiverName");
         receiverAvatar = getIntent().getStringExtra("receiverAvatar");
-
-        Log.d("ChatActivity", "Received ID: " + receiverId);
-        Log.d("ChatActivity", "Received Name: " + receiverName);
-        Log.d("ChatActivity", "Received Avatar: " + receiverAvatar);
 
         // Lấy currentUserId từ SharedPreferences
         prefManager = new SharedPrefManager(this);
@@ -99,8 +105,10 @@ public class ChatActivity extends BaseActivity {
             return;
         }
 
-        // Khởi tạo ApiService
+        // Khởi tạo ApiService và WebSocket
         apiService = ApiClient.getAuthClient(this).create(ApiService.class);
+        webSocketClient = new WebSocketClient(this, this);
+        webSocketClient.connect();
 
         handler = new Handler();
 
@@ -134,12 +142,27 @@ public class ChatActivity extends BaseActivity {
                 .into(ivAvatar);
 
         btnVoiceCall.setIsVideoCall(false);
-        btnVoiceCall.setResourceID("zego_uikit_call"); // Please fill in the resource ID name that has been configured in the ZEGOCLOUD's console here.
+        btnVoiceCall.setResourceID("zego_uikit_call");
         btnVoiceCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
 
         btnVideoCall.setIsVideoCall(true);
-        btnVideoCall.setResourceID("zego_uikit_call"); // Please fill in the resource ID name that has been configured in the ZEGOCLOUD's console here.
+        btnVideoCall.setResourceID("zego_uikit_call");
         btnVideoCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
+
+        layoutPreview = findViewById(R.id.layoutPreview);
+        ivPreview = findViewById(R.id.ivPreview);
+        btnCancelPreview = findViewById(R.id.btnCancelPreview);
+
+        btnCancelPreview.setOnClickListener(v -> {
+            layoutPreview.setVisibility(View.GONE);
+            selectedImageUri = null;
+            capturedImage = null;
+            // Ẩn nút gửi nếu không có text
+            if (etMessage.getText().toString().trim().isEmpty()) {
+                btnSend.setVisibility(View.GONE);
+                btnVoice.setVisibility(View.VISIBLE);
+            }
+        });
     }
 
     private void setupToolbar() {
@@ -148,21 +171,11 @@ public class ChatActivity extends BaseActivity {
 
         findViewById(R.id.ivBack).setOnClickListener(v -> finish());
     }
-
-    //    private void setupRecyclerView() {
-//        messageList = new ArrayList<>();
-//        chatAdapter = new ChatAdapter(messageList, currentUserId, this);
-//
-//        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-//        layoutManager.setStackFromEnd(true);
-//
-//        rvMessages.setLayoutManager(layoutManager);
-//        rvMessages.setAdapter(chatAdapter);
-//    }
+    
     private void setupRecyclerView() {
-        chatAdapter = new ChatAdapter(messageList, currentUserId);
+        chatAdapter = new ChatAdapter(messageList, currentUserId, receiverName);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setStackFromEnd(true); // Thêm dòng này để tin nhắn mới nhất hiển thị ở dưới
+        layoutManager.setStackFromEnd(true);
         rvMessages.setLayoutManager(layoutManager);
         rvMessages.setAdapter(chatAdapter);
     }
@@ -188,16 +201,6 @@ public class ChatActivity extends BaseActivity {
         // Nút ghi âm
         btnVoice.setOnClickListener(v -> {
             // TODO: Implement voice recording
-        });
-
-        // Nút gọi thoại
-        btnVoiceCall.setOnClickListener(v -> {
-            // TODO: Implement voice call
-        });
-
-        // Nút gọi video
-        btnVideoCall.setOnClickListener(v -> {
-            // TODO: Implement video call
         });
 
         // Các nút trong menu đính kèm
@@ -304,41 +307,149 @@ public class ChatActivity extends BaseActivity {
         }, 3000);
     }
 
+    @Override
+    public void onMessageReceived(String message) {
+        try {
+            JSONObject jsonMessage = new JSONObject(message);
+            String type = jsonMessage.getString("type");
+            if ("MESSAGE".equals(type)) {
+                // Xử lý tin nhắn mới
+                loadMessages(); // Tải lại danh sách tin nhắn
+            }
+        } catch (JSONException e) {
+            Log.e("ChatActivity", "Error parsing message: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onNotificationReceived(NotificationResponse notification) {
+        // Xử lý thông báo nếu cần
+        if ("MESSAGE".equals(notification.getType())) {
+            runOnUiThread(this::loadMessages);
+        }
+    }
+
+    @Override
+    public void onTypingStatusReceived(String typing) {
+        try {
+            JSONObject jsonTyping = new JSONObject(typing);
+            Long senderIdTyping = jsonTyping.getLong("senderId");
+            if (senderIdTyping.equals(receiverId)) {
+                runOnUiThread(() -> {
+                    // Hiển thị trạng thái đang nhập
+                    tvName.setText(receiverName + " đang nhập...");
+                    // Sau 2 giây, đặt lại tên
+                    new Handler().postDelayed(() -> 
+                        tvName.setText(receiverName), 2000);
+                });
+            }
+        } catch (JSONException e) {
+            Log.e("ChatActivity", "Error parsing typing status: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onConnectionStatusChanged(boolean isConnected) {
+        this.isConnected = isConnected;
+        runOnUiThread(() -> {
+            if (!isConnected) {
+                Toast.makeText(this, "Mất kết nối với server", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void sendMessage() {
-        String messageText = etMessage.getText().toString().trim();
-        if (messageText.isEmpty()) return;
-
-        ChatMessage message = new ChatMessage();
-        User sender = new User();
-        sender.setId(currentUserId);
-        User receiver = new User();
-        receiver.setId(receiverId);
-
-        message.setSender(sender);
-        message.setReceiver(receiver);
-        message.setContent(messageText);
-        message.setStatus("SENT");
-        // Sử dụng LocalDateTime thay vì SimpleDateFormat
-        LocalDateTime now = LocalDateTime.now();
-        message.setTimestamp(now.toString()); // Sẽ tự động format theo ISO-8601
-
-        apiService.sendMessage(message)
-                .enqueue(new Callback<ChatMessage>() {
+        // Kiểm tra xem có ảnh xem trước không
+        if (layoutPreview.getVisibility() == View.VISIBLE && (selectedImageUri != null || capturedImage != null)) {
+            // Upload ảnh lên Cloudinary
+            if (selectedImageUri != null) {
+                CloudinaryUtils.uploadImage(this, selectedImageUri, new CloudinaryUtils.UploadCallback() {
                     @Override
-                    public void onResponse(Call<ChatMessage> call, Response<ChatMessage> response) {
-                        if (response.isSuccessful()) {
-                            etMessage.setText("");
-                            loadMessages();
-                        }
+                    public void onSuccess(String url) {
+                        sendImageMessage(url);
                     }
 
                     @Override
-                    public void onFailure(Call<ChatMessage> call, Throwable t) {
+                    public void onError(String error) {
                         Toast.makeText(ChatActivity.this,
-                                "Error sending message: " + t.getMessage(),
+                                "Lỗi gửi tin nhắn: " + error,
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
+            } else if (capturedImage != null) {
+                CloudinaryUtils.uploadImage(this, capturedImage, new CloudinaryUtils.UploadCallback() {
+                    @Override
+                    public void onSuccess(String url) {
+                        sendImageMessage(url);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        Toast.makeText(ChatActivity.this,
+                                "Lỗi gửi tin nhắn: " + error,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        } else {
+            // Gửi tin nhắn text bình thường
+            String messageText = etMessage.getText().toString().trim();
+            if (messageText.isEmpty()) return;
+
+            MessageRequest message = new MessageRequest();
+            message.setSenderId(currentUserId);
+            message.setReceiverId(receiverId);
+            message.setContent(messageText);
+            message.setStatus("SENT");
+            message.setGroup(false);
+            message.setTimestamp(LocalDateTime.now().toString());
+
+            apiService.sendPrivateMessage(message)
+                    .enqueue(new Callback<ResponseBody>() {
+                        @Override
+                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                            if (response.isSuccessful()) {
+                                etMessage.setText("");
+                                // Thêm tin nhắn vào danh sách local
+                                MessageResponse newMessage = new MessageResponse();
+                                newMessage.setSenderId(currentUserId);
+                                newMessage.setReceiverId(receiverId);
+                                newMessage.setContent(messageText);
+                                newMessage.setTimestamp(message.getTimestamp());
+                                messageList.add(newMessage);
+                                runOnUiThread(() -> {
+                                    chatAdapter.notifyItemInserted(messageList.size() - 1);
+                                    rvMessages.scrollToPosition(messageList.size() - 1);
+                                });
+                            } else {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(ChatActivity.this,
+                                            "Lỗi gửi tin nhắn: " + response.code(),
+                                            Toast.LENGTH_SHORT).show();
+                                });
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                            runOnUiThread(() -> {
+                                Toast.makeText(ChatActivity.this,
+                                        "Lỗi kết nối: " + t.getMessage(),
+                                        Toast.LENGTH_SHORT).show();
+                            });
+                        }
+                    });
+        }
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (webSocketClient != null) {
+            webSocketClient.disconnect();
+        }
+        handler.removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -348,24 +459,81 @@ public class ChatActivity extends BaseActivity {
             switch (requestCode) {
                 case REQUEST_IMAGE_CAPTURE:
                     if (data != null && data.getExtras() != null) {
-                        Bitmap imageBitmap = (Bitmap) data.getExtras().get("data");
-                        // Convert bitmap to file and send
-                        // TODO: Implement this
+                        capturedImage = (Bitmap) data.getExtras().get("data");
+                        // Hiển thị ảnh xem trước
+                        ivPreview.setImageBitmap(capturedImage);
+                        layoutPreview.setVisibility(View.VISIBLE);
+                        layoutAttachment.setVisibility(View.GONE);
+                        // Hiển thị nút gửi
+                        btnSend.setVisibility(View.VISIBLE);
+                        btnVoice.setVisibility(View.GONE);
                     }
                     break;
                 case REQUEST_PICK_IMAGE:
                     if (data != null && data.getData() != null) {
-                        Uri imageUri = data.getData();
-                        // TODO: Implement image upload
+                        selectedImageUri = data.getData();
+                        // Hiển thị ảnh xem trước
+                        Glide.with(this)
+                                .load(selectedImageUri)
+                                .into(ivPreview);
+                        layoutPreview.setVisibility(View.VISIBLE);
+                        layoutAttachment.setVisibility(View.GONE);
+                        // Hiển thị nút gửi
+                        btnSend.setVisibility(View.VISIBLE);
+                        btnVoice.setVisibility(View.GONE);
                     }
                     break;
             }
         }
     }
+    private void sendImageMessage(String imageUrl) {
+        MessageRequest message = new MessageRequest();
+        message.setSenderId(currentUserId);
+        message.setReceiverId(receiverId);
+        message.setMediaType("IMAGE");
+        message.setMediaUrl(imageUrl);
+        message.setStatus("SENT");
+        message.setGroup(false);
+        message.setTimestamp(LocalDateTime.now().toString());
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        handler.removeCallbacksAndMessages(null);
+        apiService.sendPrivateMessage(message)
+                .enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        if (response.isSuccessful()) {
+                            // Reset trạng thái xem trước
+                            runOnUiThread(() -> {
+                                layoutPreview.setVisibility(View.GONE);
+                                selectedImageUri = null;
+                                capturedImage = null;
+                                btnSend.setVisibility(View.GONE);
+                                btnVoice.setVisibility(View.VISIBLE);
+
+                                // Thêm tin nhắn vào danh sách
+                                MessageResponse newMessage = new MessageResponse();
+                                newMessage.setSenderId(currentUserId);
+                                newMessage.setReceiverId(receiverId);
+                                newMessage.setMediaType("IMAGE");
+                                newMessage.setMediaUrl(imageUrl);
+                                newMessage.setTimestamp(message.getTimestamp());
+                                messageList.add(newMessage);
+                                chatAdapter.notifyItemInserted(messageList.size() - 1);
+                                rvMessages.scrollToPosition(messageList.size() - 1);
+                            });
+                        } else {
+                            Toast.makeText(ChatActivity.this,
+                                    "Lỗi gửi tin nhắn: " + response.code(),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+                        Toast.makeText(ChatActivity.this,
+                                "Lỗi gửi tin nhắn: " + t.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
+
 }
