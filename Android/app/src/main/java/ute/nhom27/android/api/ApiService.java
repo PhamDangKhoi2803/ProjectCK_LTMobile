@@ -111,4 +111,16 @@ public interface ApiService {
 
     @GET("api/groups/user/{userId}")
     Call<Map<String, Object>> getUserGroups(@Path("userId") Long userId);
+
+//    @POST("api/text-generator")
+//    Call<OpenAiResponse> getChatResponse(
+//            @Header("Authorization") String authHeader,
+//            @Body OpenAiRequest request
+//    );
+
+    @POST("v1/generate")
+    Call<DeepAIResponse> getChatResponse(
+            @Header("Authorization") String authHeader,
+            @Body DeepAIRequest request
+    );
 }

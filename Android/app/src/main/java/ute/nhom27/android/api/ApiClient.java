@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
 import okhttp3.Response;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import ute.nhom27.android.utils.SharedPrefManager;
@@ -17,8 +18,10 @@ import ute.nhom27.android.utils.SharedPrefManager;
 public class ApiClient {
     //private static final String BASE_URL = "http://192.168.0.103:8081/";
     private static final String BASE_URL = "http://10.0.2.2:8081/";
+    private static final String OPEN_AI_BASE_URL = "https://api.cohere.ai/";
     private static Retrofit noAuthRetrofit = null;
     private static Retrofit authRetrofit = null;
+    private static Retrofit openAiRetrofit = null;
 
     // Dùng khi chưa login
     public static Retrofit getNoAuthClient() {
@@ -79,5 +82,31 @@ public class ApiClient {
                     .build();
         }
         return authRetrofit;
+    }
+
+    public static Retrofit getOpenAiClient(String apiKey) {
+        if (openAiRetrofit == null) {
+            HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .addInterceptor(chain -> {
+                        Request original = chain.request();
+                        Request request = original.newBuilder()
+                                .addHeader("Authorization", "Bearer " + apiKey)
+                                .addHeader("Content-Type", "application/json")
+                                .build();
+                        return chain.proceed(request);
+                    })
+                    .addInterceptor(logging)
+                    .build();
+
+            openAiRetrofit = new Retrofit.Builder()
+                    .baseUrl(OPEN_AI_BASE_URL)
+                    .client(client)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+        }
+        return openAiRetrofit;
     }
 }

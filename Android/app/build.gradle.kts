@@ -65,4 +65,5 @@ dependencies {
     implementation("com.squareup.picasso:picasso:2.4.0")
 
     implementation ("com.github.ZEGOCLOUD:zego_uikit_prebuilt_call_android:+")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.9.0")
 }

@@ -1,5 +1,6 @@
 package ute.nhom27.android.view.fragment;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -148,20 +149,20 @@ public class SettingsFragment extends Fragment {
     }
 
     private void logout() {
-        // Xóa dữ liệu phiên đăng nhập
-        sharedPrefManager.clear();
-
-        // Chuyển về LoginActivity và xóa stack Activity hiện tại
-        Intent intent = new Intent(getActivity(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-
-        // Đóng MainActivity
-        if (getActivity() != null) {
-            getActivity().finish();
-        }
-
-        // Hiển thị thông báo đăng xuất thành công
-        Toast.makeText(requireContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xác nhận đăng xuất")
+                .setMessage("Bạn có chắc chắn muốn đăng xuất?")
+                .setPositiveButton("Có", (dialog, which) -> {
+                    sharedPrefManager.clear();
+                    Intent intent = new Intent(getActivity(), LoginActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    if (getActivity() != null) {
+                        getActivity().finish();
+                    }
+                    Toast.makeText(requireContext(), "Đã đăng xuất", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Không", null)
+                .show();
     }
 }

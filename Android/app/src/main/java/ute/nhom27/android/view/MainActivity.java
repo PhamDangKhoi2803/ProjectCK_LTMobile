@@ -28,6 +28,7 @@ import ute.nhom27.android.BaseActivity;
 import ute.nhom27.android.R;
 import ute.nhom27.android.SettingsActivity;
 import ute.nhom27.android.utils.SharedPrefManager;
+import ute.nhom27.android.view.fragment.AIChatFragment;
 import ute.nhom27.android.view.fragment.FriendContainerFragment;
 import ute.nhom27.android.view.fragment.FriendListFragment;
 import ute.nhom27.android.view.fragment.MessageListFragment;
@@ -80,7 +81,14 @@ public class MainActivity extends BaseActivity implements ThemeChange{
                 }
                 return true;
             }
-
+            if (itemId == R.id.nav_diary) {
+                // Chuyển đến AIChatFragment khi click vào menu Nhật ký
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new AIChatFragment())
+                        .addToBackStack(null)
+                        .commit();
+                return true;
+            }
             return false;
         });
 
