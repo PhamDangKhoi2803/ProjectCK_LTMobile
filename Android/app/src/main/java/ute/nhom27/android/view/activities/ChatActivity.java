@@ -84,7 +84,7 @@ public class ChatActivity extends BaseActivity implements OnMessageReceivedListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_message);
+        setContentView(R.layout.activity_chat);
 
         CloudinaryUtils.init(this);
 

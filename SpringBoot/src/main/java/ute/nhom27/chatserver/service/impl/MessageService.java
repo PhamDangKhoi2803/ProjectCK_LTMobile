@@ -2,6 +2,7 @@ package ute.nhom27.chatserver.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ute.nhom27.chatserver.dto.GroupMessageDTO;
 import ute.nhom27.chatserver.dto.MessageDTO;
 import ute.nhom27.chatserver.dto.MessageListDTO;
 import ute.nhom27.chatserver.entity.ChatGroup;
@@ -9,10 +10,7 @@ import ute.nhom27.chatserver.entity.ChatMessage;
 import ute.nhom27.chatserver.entity.Friendship;
 import ute.nhom27.chatserver.entity.GroupMessage;
 import ute.nhom27.chatserver.entity.User;
-import ute.nhom27.chatserver.repository.ChatGroupRepository;
-import ute.nhom27.chatserver.repository.ChatMessageRepository;
-import ute.nhom27.chatserver.repository.FriendshipRepository;
-import ute.nhom27.chatserver.repository.GroupMessageRepository;
+import ute.nhom27.chatserver.repository.*;
 import ute.nhom27.chatserver.service.IMessageService;
 
 import java.util.ArrayList;
@@ -34,6 +32,9 @@ public class MessageService implements IMessageService {
 
     @Autowired
     private ChatGroupRepository chatGroupRepository;
+
+    @Autowired
+    private GroupMemberRepository groupMemberRepository;
 
     @Override
     public List<MessageDTO> getPrivateMessages(Long user1Id, Long user2Id) {
@@ -57,20 +58,40 @@ public class MessageService implements IMessageService {
     }
 
     @Override
+    public List<GroupMessageDTO> getGroupMessagesWithInfo(Long groupId) {
+        List<GroupMessage> messages = groupMessageRepository.findByChatGroupIdOrderByTimestampAsc(groupId);
+        List<GroupMessageDTO> dtos = new ArrayList<>();
+
+        for (GroupMessage message : messages) {
+            User sender = message.getSender();
+            GroupMessageDTO dto = new GroupMessageDTO(
+                    groupId,
+                    sender.getId(),
+                    sender.getUsername(),
+                    sender.getAvatarUrl(),
+                    message.getStatus(),
+                    message.getContent(),
+                    message.getMediaUrl(),
+                    message.getMediaType(),
+                    message.getTimestamp().toString()
+            );
+            dtos.add(dto);
+        }
+
+        return dtos;
+    }
+
+    @Override
     public List<MessageListDTO> getGroupLastMessages(Long userId) {
-        // Lấy danh sách nhóm mà user tham gia
         List<ChatGroup> userGroups = chatGroupRepository.findGroupsByUserId(userId);
 
-        return userGroups.stream().map(group -> {
-            // Lấy tin nhắn cuối cùng của nhóm
+        // Lấy danh sách MessageListDTO cho tất cả nhóm
+        List<MessageListDTO> messageList = userGroups.stream().map(group -> {
             GroupMessage lastMessage = groupMessageRepository.findLastMessageByGroupId(group.getId());
-
-            // Đếm số tin nhắn chưa đọc
             int unreadCount = groupMessageRepository.countUnreadMessages(group.getId(), userId);
 
-            // Tạo MessageListDTO
             String lastMessageContent = lastMessage != null ? lastMessage.getContent() : "Chưa có tin nhắn";
-            String lastMessageTime = lastMessage != null ? lastMessage.getTimestamp() : null;
+            String lastMessageTime = lastMessage != null ? String.valueOf(lastMessage.getTimestamp()) : null;
 
             return new MessageListDTO(
                     group.getId(),
@@ -79,9 +100,18 @@ public class MessageService implements IMessageService {
                     lastMessageContent,
                     lastMessageTime,
                     unreadCount,
-                    true // isGroup = true
+                    true
             );
         }).collect(Collectors.toList());
+
+        // Sắp xếp theo thời gian tin nhắn mới nhất
+        messageList.sort((a, b) -> {
+            if (a.getLastMessageTime() == null) return 1;
+            if (b.getLastMessageTime() == null) return -1;
+            return b.getLastMessageTime().compareTo(a.getLastMessageTime());
+        });
+
+        return messageList;
     }
 
     @Override
@@ -91,7 +121,7 @@ public class MessageService implements IMessageService {
 
     @Override
     public boolean isUserInGroup(Long userId, Long groupId) {
-        return chatGroupRepository.existsByIdAndMembersId(groupId, userId);
+        return groupMemberRepository.existsByChatGroupIdAndUserId(groupId, userId);
     }
 
     @Override
@@ -109,21 +139,17 @@ public class MessageService implements IMessageService {
             friends.add(friend);
         }
 
-        return friends.stream().map(friend -> {
-            // Lấy tin nhắn gần nhất giữa userId và friend
+        // Lấy danh sách MessageListDTO cho tất cả bạn bè
+        List<MessageListDTO> messageList = friends.stream().map(friend -> {
             Optional<ChatMessage> lastMessageOpt = chatMessageRepository.findLatestMessageBetweenUsers(userId, friend.getId());
-
-            // Đếm số tin nhắn chưa đọc
             int unreadCount = chatMessageRepository.countUnreadMessages(userId, friend.getId());
 
-            // Xử lý nội dung tin nhắn cuối cùng
             String lastMessageContent;
             String lastMessageTime;
 
             if (lastMessageOpt.isPresent()) {
                 ChatMessage lastMessage = lastMessageOpt.get();
 
-                // Xử lý nội dung tin nhắn dựa vào loại media
                 if (lastMessage.getMediaUrl() != null && !lastMessage.getMediaUrl().isEmpty()) {
                     if ("IMAGE".equals(lastMessage.getMediaType())) {
                         lastMessageContent = "Đã gửi một hình ảnh";
@@ -136,7 +162,6 @@ public class MessageService implements IMessageService {
                     lastMessageContent = lastMessage.getContent();
                 }
 
-                // Xử lý timestamp
                 lastMessageTime = String.valueOf(lastMessage.getTimestamp());
             } else {
                 lastMessageContent = "Chưa có tin nhắn";
@@ -150,9 +175,18 @@ public class MessageService implements IMessageService {
                     lastMessageContent,
                     lastMessageTime,
                     unreadCount,
-                    false // isGroup = false
+                    false
             );
         }).collect(Collectors.toList());
+
+        // Sắp xếp theo thời gian tin nhắn mới nhất
+        messageList.sort((a, b) -> {
+            if (a.getLastMessageTime() == null) return 1;
+            if (b.getLastMessageTime() == null) return -1;
+            return b.getLastMessageTime().compareTo(a.getLastMessageTime());
+        });
+
+        return messageList;
     }
 
     @Override

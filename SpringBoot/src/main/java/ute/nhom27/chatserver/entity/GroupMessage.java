@@ -31,7 +31,7 @@ public class GroupMessage {
     private String status = "SENT";
 
     @Column(nullable = false)
-    private String timestamp;
+    private LocalDateTime timestamp = LocalDateTime.now();
 
     @Column(nullable = false)
     private boolean isDeletedForUser = false;
@@ -95,11 +95,11 @@ public class GroupMessage {
         this.status = status;
     }
 
-    public String getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp) {
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 

@@ -3,6 +3,7 @@ package ute.nhom27.chatserver.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ute.nhom27.chatserver.dto.GroupMemberDTO;
 import ute.nhom27.chatserver.entity.ChatGroup;
 import ute.nhom27.chatserver.entity.GroupMember;
 import ute.nhom27.chatserver.service.IGroupService;
@@ -62,15 +63,15 @@ public class GroupController {
     // Lấy danh sách thành viên
     @GetMapping("/{groupId}/members")
     public ResponseEntity<?> getMembers(@PathVariable Long groupId) {
-        List<GroupMember> members = groupService.getGroupMembers(groupId);
+        List<GroupMemberDTO> members = groupService.getGroupMembersWithInfo(groupId);
         if (members != null) {
             return ResponseEntity.ok(Map.of(
-                "message", "Lấy danh sách thành viên thành công",
-                "members", members
+                    "message", "Lấy danh sách thành viên thành công",
+                    "members", members
             ));
         }
         return ResponseEntity.badRequest().body(Map.of(
-            "message", "Không thể lấy danh sách thành viên"
+                "message", "Không thể lấy danh sách thành viên"
         ));
     }
 

@@ -12,18 +12,18 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.List;
 import ute.nhom27.android.R;
-import ute.nhom27.android.model.User;
 import ute.nhom27.android.model.response.MessageListResponse;
 import ute.nhom27.android.view.activities.ChatActivity;
+import ute.nhom27.android.view.activities.GroupChatActivity;
 import ute.nhom27.android.utils.DateTimeUtils;
 
 public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.ViewHolder> {
 
-    private List<MessageListResponse> friendList;
+    private List<MessageListResponse> messageList;
     private Context context;
 
-    public MessageListAdapter(List<MessageListResponse> friendList, Context context) {
-        this.friendList = friendList;
+    public MessageListAdapter(List<MessageListResponse> messageList, Context context) {
+        this.messageList = messageList;
         this.context = context;
     }
 
@@ -37,7 +37,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        MessageListResponse message = friendList.get(position);
+        MessageListResponse message = messageList.get(position);
 
         holder.tvName.setText(message.getName());
         holder.tvLastMessage.setText(message.getLastMessage());
@@ -70,13 +70,22 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
             holder.ivAvatar.setImageResource(message.isGroup() ? R.drawable.default_avatar : R.drawable.default_avatar);
         }
 
-        // Xử lý click trực tiếp trong adapter
+        // Xử lý click
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, ChatActivity.class);
-            intent.putExtra("receiverId", message.getId());
-            intent.putExtra("receiverName", message.getName());
-            intent.putExtra("receiverAvatar", message.getAvatar());
-            // Thêm flags vì context không phải Activity
+            Intent intent;
+            if (message.isGroup()) {
+                // Mở GroupChatActivity cho tin nhắn nhóm
+                intent = new Intent(context, GroupChatActivity.class);
+                intent.putExtra("groupId", message.getId());
+                intent.putExtra("groupName", message.getName());
+                intent.putExtra("groupAvatar", message.getAvatar());
+            } else {
+                // Mở ChatActivity cho tin nhắn cá nhân
+                intent = new Intent(context, ChatActivity.class);
+                intent.putExtra("receiverId", message.getId());
+                intent.putExtra("receiverName", message.getName());
+                intent.putExtra("receiverAvatar", message.getAvatar());
+            }
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         });
@@ -84,7 +93,7 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
 
     @Override
     public int getItemCount() {
-        return friendList.size();
+        return messageList.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

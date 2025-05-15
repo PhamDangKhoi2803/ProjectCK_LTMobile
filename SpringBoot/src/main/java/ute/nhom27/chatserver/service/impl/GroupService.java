@@ -2,6 +2,7 @@ package ute.nhom27.chatserver.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ute.nhom27.chatserver.dto.GroupMemberDTO;
 import ute.nhom27.chatserver.entity.ChatGroup;
 import ute.nhom27.chatserver.entity.GroupMember;
 import ute.nhom27.chatserver.entity.User;
@@ -11,6 +12,7 @@ import ute.nhom27.chatserver.repository.UserRepository;
 import ute.nhom27.chatserver.service.IGroupService;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -111,5 +113,27 @@ public class GroupService implements IGroupService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    @Override
+    public List<GroupMemberDTO> getGroupMembersWithInfo(Long groupId) {
+        List<GroupMember> members = groupMemberRepository.findByChatGroupId(groupId);
+        List<GroupMemberDTO> memberDTOs = new ArrayList<>();
+
+        for (GroupMember member : members) {
+            User user = userRepository.findById(member.getId()).orElse(null);
+            if (user != null) {
+                GroupMemberDTO dto = new GroupMemberDTO(
+                        groupId,
+                        user.getId(),
+                        user.getUsername(),
+                        member.getRole(),
+                        user.getAvatarUrl()
+                );
+                memberDTOs.add(dto);
+            }
+        }
+
+        return memberDTOs;
     }
 }
