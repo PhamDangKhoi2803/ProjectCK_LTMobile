@@ -154,11 +154,10 @@ public interface ApiService {
             @Header("Authorization") String token
     );
 
-    @Multipart
-    @POST("api/users/{userId}/avatar")
-    Call<User> uploadAvatar(
+    @PUT("api/users/{userId}/avatar")
+    Call<UserResponse> updateAvatar(
             @Path("userId") Long userId,
-            @Part MultipartBody.Part avatar,
+            @Body String avatarUrl,
             @Header("Authorization") String token
     );
 

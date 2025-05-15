@@ -27,6 +27,7 @@ import com.zegocloud.uikit.prebuilt.call.invite.ZegoUIKitPrebuiltCallInvitationC
 import ute.nhom27.android.BaseActivity;
 import ute.nhom27.android.R;
 import ute.nhom27.android.SettingsActivity;
+import ute.nhom27.android.utils.CloudinaryUtils;
 import ute.nhom27.android.utils.SharedPrefManager;
 import ute.nhom27.android.view.fragment.AIChatFragment;
 import ute.nhom27.android.view.fragment.FriendContainerFragment;
@@ -45,6 +46,7 @@ public class MainActivity extends BaseActivity implements ThemeChange{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         bottomNavigationView = findViewById(R.id.bottom_navigation);
+        CloudinaryUtils.init(this);
 
         if (savedInstanceState == null) {
             loadFragment(new MessageListFragment());

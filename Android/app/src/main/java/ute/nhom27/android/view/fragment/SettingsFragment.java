@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,6 +26,10 @@ import androidx.fragment.app.Fragment;
 import androidx.loader.content.CursorLoader;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,6 +49,8 @@ import ute.nhom27.android.api.ApiService;
 import ute.nhom27.android.api.PasswordChangeRequest;
 import ute.nhom27.android.api.ThemeUpdateRequest;
 import ute.nhom27.android.model.User;
+import ute.nhom27.android.model.response.UserResponse;
+import ute.nhom27.android.utils.CloudinaryUtils;
 import ute.nhom27.android.utils.SharedPrefManager;
 import ute.nhom27.android.view.activities.LoginActivity;
 
@@ -62,6 +70,8 @@ public class SettingsFragment extends Fragment {
     private SharedPrefManager sharedPrefManager;
     private ApiService apiService;
     private ThemeChange themeChange;
+
+    private ProgressBar progressBar;
 
 
     public SettingsFragment() {
@@ -151,15 +161,20 @@ public class SettingsFragment extends Fragment {
             tvEmail.setText("Email: " + currentUser.getEmail());
             tvPhone.setText("Số điện thoại: " + currentUser.getPhone());
 
-            // Load avatar if exists
+            // Load avatar từ Cloudinary
             if (currentUser.getAvatarURL() != null && !currentUser.getAvatarURL().isEmpty()) {
-                Glide.with(this)
+                Log.d("User", "Loading avatar from URL: " + currentUser.getAvatarURL());
+
+                Glide.with(requireContext())
                         .load(currentUser.getAvatarURL())
                         .placeholder(R.drawable.default_avatar)
                         .error(R.drawable.default_avatar)
+                        .circleCrop()
                         .into(ivAvatar);
+            } else {
+                Log.d("User", "No avatar URL found, using default avatar");
+                ivAvatar.setImageResource(R.drawable.default_avatar);
             }
-
             // Load friends count
             loadFriendsCount();
         }
@@ -218,29 +233,83 @@ public class SettingsFragment extends Fragment {
         User currentUser = sharedPrefManager.getUser();
         if (currentUser == null) return;
 
-        File imageFile = new File(getRealPathFromUri(imageUri));
-        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), imageFile);
-        MultipartBody.Part body = MultipartBody.Part.createFormData("avatar", imageFile.getName(), requestFile);
-
-        String token = "Bearer " + sharedPrefManager.getToken();
-        apiService.uploadAvatar(currentUser.getId(), body, token).enqueue(new Callback<User>() {
+        CloudinaryUtils.uploadImage(requireContext(), imageUri, new CloudinaryUtils.UploadCallback() {
             @Override
-            public void onResponse(Call<User> call, Response<User> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    sharedPrefManager.saveUser(response.body());
-                    loadUserInfo();
-                    Toast.makeText(getContext(), "Cập nhật ảnh đại diện thành công", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getContext(), "Lỗi khi cập nhật ảnh đại diện", Toast.LENGTH_SHORT).show();
+            public void onSuccess(String imageUrl) {
+                Log.d("Cloudinary", "Uploaded image URL: " + imageUrl);
+
+                // Lấy token từ SharedPrefManager
+                String token = sharedPrefManager.getToken();
+                if (token == null || token.isEmpty()) {
+                    Toast.makeText(getContext(), "Token không hợp lệ", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+
+                // Log token trước khi thêm prefix
+                Log.d("Token Debug", "Original token: " + token);
+
+                // Thêm prefix "Bearer " nếu chưa có
+                if (!token.startsWith("Bearer ")) {
+                    token = "Bearer " + token;
+                }
+
+                // Log token sau khi thêm prefix
+                Log.d("Token Debug", "Token with prefix: " + token);
+
+                apiService.updateAvatar(currentUser.getId(), imageUrl, token).enqueue(new Callback<UserResponse>() {
+                    @Override
+                    public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            UserResponse updatedUser = response.body();
+                            // Cập nhật user trong SharedPreferences
+                            User user = new User();
+                            user.setId(updatedUser.getId());
+                            user.setUsername(updatedUser.getUsername());
+                            user.setEmail(updatedUser.getEmail());
+                            user.setPhone(updatedUser.getPhone());
+                            user.setAvatarURL(updatedUser.getAvatarURL());
+                            sharedPrefManager.saveUser(user);
+
+                            // Load ảnh mới ngay lập tức
+                            if (getActivity() != null) {
+                                getActivity().runOnUiThread(() -> {
+                                    Glide.with(requireContext())
+                                            .load(updatedUser.getAvatarURL())
+                                            .placeholder(R.drawable.default_avatar)
+                                            .error(R.drawable.default_avatar)
+                                            .circleCrop()
+                                            .into(ivAvatar);
+                                });
+                            }
+
+                            Toast.makeText(getContext(), "Cập nhật ảnh đại diện thành công", Toast.LENGTH_SHORT).show();
+                        } else {
+                            try {
+                                String errorBody = response.errorBody() != null ? response.errorBody().string() : "Unknown error";
+                                Log.e("API", "Error response: " + response.code() + ", Body: " + errorBody);
+                            } catch (IOException e) {
+                                Log.e("API", "Error reading error body", e);
+                            }
+                            Toast.makeText(getContext(), "Lỗi khi cập nhật ảnh đại diện", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<UserResponse> call, Throwable t) {
+                        Log.e("API", "Error updating avatar: " + t.getMessage());
+                        Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
             @Override
-            public void onFailure(Call<User> call, Throwable t) {
-                Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
+            public void onError(String error) {
+                Log.e("Cloudinary", "Upload error: " + error);
+                Toast.makeText(getContext(), "Lỗi khi upload ảnh: " + error, Toast.LENGTH_SHORT).show();
             }
         });
     }
+
 
     private String getRealPathFromUri(Uri uri) {
         String[] projection = {MediaStore.Images.Media.DATA};

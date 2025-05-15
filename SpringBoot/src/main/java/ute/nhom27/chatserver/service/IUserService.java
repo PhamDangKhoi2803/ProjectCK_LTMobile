@@ -21,6 +21,9 @@ public interface IUserService {
 
     // Thêm các phương thức mới
     int getFriendsCount(Long userId);
-    User updateAvatar(Long userId, MultipartFile file);
+    User updateAvatar(Long userId, String avatarUrl);
     boolean changePassword(Long userId, String currentPassword, String newPassword);
+
+    User findById(Long id);
+    User findByPhone(String phone);
 }

@@ -1,17 +1,22 @@
 package ute.nhom27.chatserver.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ute.nhom27.chatserver.dto.PasswordChangeRequest;
 import ute.nhom27.chatserver.dto.UserDTO;
 import ute.nhom27.chatserver.entity.User;
+import ute.nhom27.chatserver.repository.UserRepository;
 import ute.nhom27.chatserver.service.IUserService;
+import ute.nhom27.chatserver.util.JwtUtil;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -22,6 +27,10 @@ public class UserController {
 
     @Autowired
     private IUserService userService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @GetMapping("/search")
     public ResponseEntity<?> searchUsers(
@@ -75,23 +84,55 @@ public class UserController {
         }
     }
 
-    @PostMapping("/{userId}/avatar")
+    @PutMapping("/{userId}/avatar")
     public ResponseEntity<?> updateAvatar(
             @PathVariable Long userId,
-            @RequestParam("avatar") MultipartFile file) {
+            @RequestBody String avatarUrl,
+            @RequestHeader("Authorization") String token) {
         try {
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest().body("Please select a file to upload");
+            log.info("Updating avatar for user {} with URL: {}", userId, avatarUrl);
+
+            // Kiểm tra token
+            if (token == null || !token.startsWith("Bearer ")) {
+                log.error("Invalid token format");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Invalid token");
             }
 
-            User updatedUser = userService.updateAvatar(userId, file);
-            return ResponseEntity.ok(userService.convertToDTO(updatedUser));
+            // Lấy user từ token
+            String jwtToken = token.substring(7);
+            log.info("JWT Token: {}", jwtToken);
+
+            String phone = jwtUtil.extractUsername(jwtToken);
+            log.info("Extracted phone from token: {}", phone);
+
+            User currentUser = userService.findByPhone(phone);
+            if (currentUser == null) {
+                log.error("User not found for phone: {}", phone);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("User not found");
+            }
+
+            // Kiểm tra quyền
+            if (!currentUser.getId().equals(userId)) {
+                log.error("Access denied for user {} trying to update user {}", currentUser.getId(), userId);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Access denied");
+            }
+
+            // Cập nhật avatar
+            User updatedUser = userService.updateAvatar(userId, avatarUrl);
+            log.info("Successfully updated avatar for user {}", userId);
+
+            // Chuyển đổi sang DTO trước khi trả về
+            UserDTO userDTO = userService.convertToDTO(updatedUser);
+            return ResponseEntity.ok(userDTO);
         } catch (Exception e) {
-            log.error("Error uploading avatar for user {}: {}", userId, e.getMessage());
-            return ResponseEntity.badRequest().body("Error uploading avatar");
+            log.error("Error updating avatar: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error updating avatar: " + e.getMessage());
         }
     }
-
     @PostMapping("/{userId}/change-password")
     public ResponseEntity<?> changePassword(
             @PathVariable Long userId,
