@@ -1,5 +1,6 @@
 package ute.nhom27.chatserver.service;
 
+import ute.nhom27.chatserver.dto.GroupMemberDTO;
 import ute.nhom27.chatserver.entity.ChatGroup;
 import ute.nhom27.chatserver.entity.GroupMember;
 
@@ -20,4 +21,6 @@ public interface IGroupService {
     ChatGroup getGroupById(Long groupId);
 
     List<ChatGroup> getGroupsByUserId(Long userId);
+
+    List<GroupMemberDTO> getGroupMembersWithInfo(Long groupId);
 }

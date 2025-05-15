@@ -15,12 +15,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CloudinaryUtils {
+
+    private static boolean isInitialized = false;
     public static void init(Context context) {
+
+        if (isInitialized) {
+            return; // Không khởi tạo lại nếu đã được khởi tạo
+        }
+
         Map<String, String> config = new HashMap<>();
         config.put("cloud_name", "dfnqr8qrl");
         config.put("api_key", "585891864467668");
         config.put("api_secret", "585891864467668");
         MediaManager.init(context, config);
+
+        isInitialized = true;
     }
 
     public interface UploadCallback {

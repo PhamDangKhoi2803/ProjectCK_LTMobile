@@ -5,11 +5,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ute.nhom27.chatserver.dto.GroupMessageDTO;
 import ute.nhom27.chatserver.dto.MessageDTO;
 import ute.nhom27.chatserver.dto.MessageListDTO;
+import ute.nhom27.chatserver.entity.ChatGroup;
 import ute.nhom27.chatserver.entity.ChatMessage;
 import ute.nhom27.chatserver.entity.GroupMessage;
 import ute.nhom27.chatserver.entity.User;
+import ute.nhom27.chatserver.repository.ChatGroupRepository;
 import ute.nhom27.chatserver.service.IFriendshipService;
 import ute.nhom27.chatserver.service.IMessageService;
 import ute.nhom27.chatserver.service.IUserService;
@@ -33,6 +36,9 @@ public class MessageController {
 
     @Autowired
     private NotificationController notificationController;
+
+    @Autowired
+    private ChatGroupRepository chatGroupRepository;
 
     @GetMapping("/private")
     public ResponseEntity<?> getPrivateMessages(
@@ -58,8 +64,9 @@ public class MessageController {
     }
 
     @GetMapping("/group/{groupId}")
-    public List<GroupMessage> getGroupMessages(@PathVariable Long groupId) {
-        return messageService.getGroupMessages(groupId);
+    public ResponseEntity<List<GroupMessageDTO>> getGroupMessages(@PathVariable Long groupId) {
+        List<GroupMessageDTO> messages = messageService.getGroupMessagesWithInfo(groupId);
+        return ResponseEntity.ok(messages);
     }
 
     @GetMapping("/friends/{userId}")
@@ -163,23 +170,16 @@ public class MessageController {
             }
         }
 
-        // Tạo và lưu tin nhắn nhóm
+        ChatGroup chatGroup = chatGroupRepository.findById(groupId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhóm chat"));
+
         GroupMessage message = new GroupMessage();
         message.setSender(sender);
-        message.setId(groupId);
+        message.setChatGroup(chatGroup);
         message.setContent(content != null ? content.trim() : "");
         message.setMediaUrl(mediaUrl);
         message.setMediaType(mediaType);
         messageService.saveGroupMessage(message);
-
-        // Gửi thông báo WebSocket cho tất cả thành viên trong nhóm
-        List<Long> groupMembers = messageService.getGroupMembers(groupId);
-//        String notificationContent = content != null && !content.trim().isEmpty() ? content : (mediaType != null ? "Đã gửi một " + mediaType.toLowerCase() : "Đã gửi một media");
-//        for (Long memberId : groupMembers) {
-//            if (!memberId.equals(senderId)) {
-//                notificationController.sendGroupMessageNotification(memberId, groupId, senderId, notificationContent);
-//            }
-//        }
 
         return ResponseEntity.ok("Tin nhắn nhóm đã được gửi");
     }

@@ -42,7 +42,7 @@ public class GroupMessagesFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
-                           Bundle savedInstanceState) {
+                             Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_group_messages, container, false);
     }
 
@@ -69,13 +69,23 @@ public class GroupMessagesFragment extends Fragment {
     private void fetchGroupMessages() {
         SharedPrefManager sharedPrefManager = new SharedPrefManager(requireContext());
         Long userId = sharedPrefManager.getUser().getId();
+
+        Log.d("GroupMessagesFragment", "Fetching group messages for userId: " + userId);
+
         apiService.getGroupLastMessages(userId).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<List<MessageListResponse>> call, Response<List<MessageListResponse>> response) {
+                Log.d("GroupMessagesFragment", "Response code: " + response.code());
+
                 if (response.isSuccessful()) {
                     List<MessageListResponse> list = response.body();
                     if (list == null) {
+                        Log.d("GroupMessagesFragment", "Response body is null");
                         list = new ArrayList<>();
+                    }
+                    // Đánh dấu các tin nhắn là tin nhắn nhóm
+                    for (MessageListResponse message : list) {
+                        message.setGroup(true);
                     }
                     adapter = new MessageListAdapter(list, getContext());
                     recyclerView.setAdapter(adapter);
@@ -91,4 +101,10 @@ public class GroupMessagesFragment extends Fragment {
             }
         });
     }
-} 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        fetchGroupMessages();
+    }
+}

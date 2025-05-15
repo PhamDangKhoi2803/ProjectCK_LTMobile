@@ -24,6 +24,8 @@ import ute.nhom27.android.model.GroupMember;
 import ute.nhom27.android.model.TypingStatus;
 import ute.nhom27.android.model.User;
 import ute.nhom27.android.model.request.MessageRequest;
+import ute.nhom27.android.model.response.GroupMemberResponse;
+import ute.nhom27.android.model.response.GroupMessageResponse;
 import ute.nhom27.android.model.response.MessageListResponse;
 import ute.nhom27.android.model.response.MessageResponse;
 import ute.nhom27.android.model.response.UserResponse;
@@ -92,6 +94,8 @@ public interface ApiService {
     @GET("api/messages/friends/{userId}")
     Call<List<MessageListResponse>> getFriendLastMessages(@Path("userId") Long userId);
 
+    @GET("api/messages/group/{groupId}")
+    Call<List<GroupMessageResponse>> getGroupMessages(@Path("groupId") Long groupId);
     @GET("api/messages/group-last-messages/{userId}")
     Call<List<MessageListResponse>> getGroupLastMessages(@Path("userId") Long userId);
 
@@ -107,8 +111,8 @@ public interface ApiService {
             @Query("userId") Long userId
     );
 
-    @GET("api/groups/{groupId}/members")
-    Call<Map<String, Object>> getGroupMembers(@Path("groupId") Long groupId);
+    @GET("api/groups/user/{userId}")
+    Call<List<GroupMemberResponse>> getGroupMembers(@Path("userId") Long userId);
 
     @GET("api/groups/{groupId}")
     Call<Map<String, Object>> getGroupInfo(@Path("groupId") Long groupId);
@@ -119,8 +123,8 @@ public interface ApiService {
     @POST("api/messages/send")
     Call<ResponseBody> sendPrivateMessage(@Body MessageRequest message);
 
-    @POST("api/messages/group/send") 
-    Call<Map<String, String>> sendGroupMessage(@Body MessageRequest message);
+    @POST("api/messages/group/send")
+    Call<ResponseBody> sendGroupMessage(@Body MessageRequest message);
 
 //    @POST("api/text-generator")
 //    Call<OpenAiResponse> getChatResponse(
