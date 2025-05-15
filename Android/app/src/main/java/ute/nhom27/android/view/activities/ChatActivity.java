@@ -24,11 +24,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton;
+import com.zegocloud.uikit.service.defines.ZegoUIKitUser;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -56,8 +59,8 @@ public class ChatActivity extends BaseActivity {
     private EditText etMessage;
     private ImageButton btnSend, btnAttachment, btnEmoji, btnVoice;
     private ImageView ivAvatar;
-    private TextView tvName, tvStatus;
-    private ImageButton btnVoiceCall, btnVideoCall;
+    private TextView tvName;
+    private ZegoSendCallInvitationButton btnVoiceCall, btnVideoCall;
     private LinearLayout layoutAttachment;
 
     private ChatAdapter chatAdapter;
@@ -118,7 +121,6 @@ public class ChatActivity extends BaseActivity {
         btnVoice = findViewById(R.id.btnVoice);
         ivAvatar = findViewById(R.id.ivAvatar);
         tvName = findViewById(R.id.tvName);
-        tvStatus = findViewById(R.id.tvStatus);
         btnVoiceCall = findViewById(R.id.btnVoiceCall);
         btnVideoCall = findViewById(R.id.btnVideoCall);
         layoutAttachment = findViewById(R.id.layoutAttachment);
@@ -130,6 +132,14 @@ public class ChatActivity extends BaseActivity {
                 .placeholder(R.drawable.default_avatar)
                 .circleCrop()
                 .into(ivAvatar);
+
+        btnVoiceCall.setIsVideoCall(false);
+        btnVoiceCall.setResourceID("zego_uikit_call"); // Please fill in the resource ID name that has been configured in the ZEGOCLOUD's console here.
+        btnVoiceCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
+
+        btnVideoCall.setIsVideoCall(true);
+        btnVideoCall.setResourceID("zego_uikit_call"); // Please fill in the resource ID name that has been configured in the ZEGOCLOUD's console here.
+        btnVideoCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
     }
 
     private void setupToolbar() {
