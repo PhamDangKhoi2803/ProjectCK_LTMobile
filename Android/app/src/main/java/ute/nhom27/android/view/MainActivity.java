@@ -30,6 +30,7 @@ import ute.nhom27.android.SettingsActivity;
 import ute.nhom27.android.utils.CloudinaryUtils;
 import ute.nhom27.android.utils.SharedPrefManager;
 import ute.nhom27.android.view.fragment.AIChatFragment;
+import ute.nhom27.android.view.fragment.CallHistoryFragment;
 import ute.nhom27.android.view.fragment.FriendContainerFragment;
 import ute.nhom27.android.view.fragment.FriendListFragment;
 import ute.nhom27.android.view.fragment.MessageListFragment;
@@ -74,7 +75,11 @@ public class MainActivity extends BaseActivity implements ThemeChange{
                 selectedFragment = new MessageListFragment();
             } else if (itemId == R.id.nav_contacts) {
                 selectedFragment = new FriendContainerFragment();
+            } else if (itemId == R.id.nav_more) {
+                selectedFragment = new CallHistoryFragment();
             }
+
+
 
             if (selectedFragment != null) {
                 loadFragment(selectedFragment);

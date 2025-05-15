@@ -43,7 +43,9 @@ import ute.nhom27.android.R;
 import ute.nhom27.android.adapter.ChatAdapter;
 import ute.nhom27.android.api.ApiClient;
 import ute.nhom27.android.api.ApiService;
+import ute.nhom27.android.model.CallHistory;
 import ute.nhom27.android.model.request.MessageRequest;
+import ute.nhom27.android.model.response.CallHistoryResponse;
 import ute.nhom27.android.model.response.MessageResponse;
 import ute.nhom27.android.model.response.NotificationResponse;
 import ute.nhom27.android.network.OnMessageReceivedListener;
@@ -141,13 +143,7 @@ public class ChatActivity extends BaseActivity implements OnMessageReceivedListe
                 .circleCrop()
                 .into(ivAvatar);
 
-        btnVoiceCall.setIsVideoCall(false);
-        btnVoiceCall.setResourceID("zego_uikit_call");
-        btnVoiceCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
-
-        btnVideoCall.setIsVideoCall(true);
-        btnVideoCall.setResourceID("zego_uikit_call");
-        btnVideoCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
+        initCallButtons();
 
         layoutPreview = findViewById(R.id.layoutPreview);
         ivPreview = findViewById(R.id.ivPreview);
@@ -161,6 +157,55 @@ public class ChatActivity extends BaseActivity implements OnMessageReceivedListe
             if (etMessage.getText().toString().trim().isEmpty()) {
                 btnSend.setVisibility(View.GONE);
                 btnVoice.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    private void initCallButtons() {
+        // Thiết lập các nút gọi bình thường
+        btnVoiceCall.setIsVideoCall(false);
+        btnVoiceCall.setResourceID("zego_uikit_call");
+        btnVoiceCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
+
+        btnVideoCall.setIsVideoCall(true);
+        btnVideoCall.setResourceID("zego_uikit_call");
+        btnVideoCall.setInvitees(Collections.singletonList(new ZegoUIKitUser(receiverName)));
+
+        btnVoiceCall.setOnClickListener(v -> {
+            // Tạo thông tin cuộc gọi
+            CallHistoryResponse callHistory = new CallHistoryResponse(
+                    null, currentUserId, receiverId, "AUDIO", "OUTGOING",
+                    LocalDateTime.now().toString(), null, 0);
+
+            // Lưu vào cơ sở dữ liệu
+            saveCallHistory(callHistory);
+        });
+
+        btnVideoCall.setOnClickListener(v -> {
+            // Tạo thông tin cuộc gọi
+            CallHistoryResponse callHistory = new CallHistoryResponse(
+                    null, currentUserId, receiverId, "VIDEO", "OUTGOING",
+                    LocalDateTime.now().toString(), null, 0);
+
+            // Lưu vào cơ sở dữ liệu
+            saveCallHistory(callHistory);
+        });
+    }
+
+    private void saveCallHistory(CallHistoryResponse callHistory) {
+        apiService.saveCallHistory(callHistory).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    Log.d("CallHistory", "Call history saved successfully");
+                } else {
+                    Log.e("CallHistory", "Failed to save call history: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Log.e("CallHistory", "Error saving call history", t);
             }
         });
     }

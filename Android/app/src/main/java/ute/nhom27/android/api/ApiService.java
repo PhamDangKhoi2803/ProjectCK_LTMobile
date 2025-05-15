@@ -17,6 +17,7 @@ import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 import ute.nhom27.android.model.AISuggestion;
+import ute.nhom27.android.model.CallHistory;
 import ute.nhom27.android.model.ChatGroup;
 import ute.nhom27.android.model.ChatMessage;
 import ute.nhom27.android.model.Friendship;
@@ -25,6 +26,7 @@ import ute.nhom27.android.model.GroupMember;
 import ute.nhom27.android.model.TypingStatus;
 import ute.nhom27.android.model.User;
 import ute.nhom27.android.model.request.MessageRequest;
+import ute.nhom27.android.model.response.CallHistoryResponse;
 import ute.nhom27.android.model.response.GroupMemberResponse;
 import ute.nhom27.android.model.response.GroupMessageResponse;
 import ute.nhom27.android.model.response.MessageListResponse;
@@ -37,6 +39,9 @@ public interface ApiService {
 
     @POST("auth/register")
     Call<LoginResponse> register(@Body RegisterRequest request);
+
+    @GET("api/users/{userId}")
+    Call<UserResponse> getUserInfo(@Path("userId") Long userId);
 
     @PUT("auth/update-theme")
     Call<User> updateTheme(@Body ThemeUpdateRequest request, @Header("Authorization") String token);
@@ -166,4 +171,20 @@ public interface ApiService {
             @Body PasswordChangeRequest request,
             @Header("Authorization") String token
     );
+
+    // Lấy lịch sử cuộc gọi của người dùng
+    @GET("api/calls/user/{userId}")
+    Call<List<CallHistoryResponse>> getCallHistory(@Path("userId") Long userId);
+
+    @POST("api/calls")
+    Call<ResponseBody> saveCallHistory(@Body CallHistoryResponse callHistory);
+
+    @PUT("api/calls/{callId}")
+    Call<ResponseBody> updateCallStatus(
+            @Path("callId") Long callId,
+            @Body CallHistoryResponse callHistory);
+
+    // Lấy cuộc gọi nhỡ
+    @GET("api/calls/missed/{userId}")
+    Call<List<CallHistoryResponse>> getMissedCalls(@Path("userId") Long userId);
 }
