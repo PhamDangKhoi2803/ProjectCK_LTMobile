@@ -30,7 +30,7 @@
 
 ## ⚙️ **Cơ Chế Vận Hành**
 
-**Hệ thống gồm 2 vai trò chính:**
+**Hệ thống gồm 1 vai trò:**
 
 - 👤 **USER (Người dùng)**
 
@@ -67,7 +67,7 @@ Cách 2: Download source code của toàn bộ dự án được sinh viên gử
 - Mở **IntelliJ IDEA**
   - `File → Open → chọn thư mục vừa clone phần API về( hoặc chọn thư mục chứa API cho dự án nếu tải trực tiếp source code về) 
   - Mở file `application.properties`, chỉnh sửa phần cấu hình database:
-    ```yaml
+    ```
     spring.datasource.username: <Tên người dùng MySQL>
     spring.datasource.password: <Mật khẩu MySQL>
     ```
