@@ -178,13 +178,7 @@ public class FriendRequestFragment extends Fragment implements OnMessageReceived
 
     @Override
     public void onConnectionStatusChanged(boolean isConnected) {
-        if (getActivity() != null) {
-            getActivity().runOnUiThread(() -> {
-                Toast.makeText(getContext(), 
-                    isConnected ? "WebSocket Connected" : "WebSocket Disconnected", 
-                    Toast.LENGTH_SHORT).show();
-            });
-        }
+
     }
 
     @Override
@@ -194,4 +188,5 @@ public class FriendRequestFragment extends Fragment implements OnMessageReceived
             webSocketClient.disconnect();
         }
     }
+
 }

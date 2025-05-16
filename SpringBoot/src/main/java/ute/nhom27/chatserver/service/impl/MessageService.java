@@ -193,4 +193,15 @@ public class MessageService implements IMessageService {
     public void savePrivateMessage(ChatMessage message) {
         chatMessageRepository.save(message);
     }
+
+    @Override
+    public boolean deleteMessagesBetweenUsers(Long userId1, Long userId2) {
+        try {
+            // Xóa tất cả tin nhắn giữa hai người dùng
+            chatMessageRepository.deleteMessagesBetweenUsers(userId1, userId2);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

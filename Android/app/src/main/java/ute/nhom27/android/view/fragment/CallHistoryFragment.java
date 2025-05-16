@@ -58,15 +58,6 @@ public class CallHistoryFragment extends Fragment implements CallHistoryAdapter.
         progressBar = view.findViewById(R.id.progressBar);
         tvEmpty = view.findViewById(R.id.tvEmpty);
 
-        // Khởi tạo Toolbar
-        androidx.appcompat.widget.Toolbar toolbar = view.findViewById(R.id.toolbar);
-        toolbar.setNavigationIcon(R.drawable.ic_back);
-        toolbar.setNavigationOnClickListener(v -> {
-            if (getActivity() != null) {
-                getActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
-
         // Khởi tạo danh sách và adapter
         callHistoryList = new ArrayList<>();
         userInfoMap = new HashMap<>();

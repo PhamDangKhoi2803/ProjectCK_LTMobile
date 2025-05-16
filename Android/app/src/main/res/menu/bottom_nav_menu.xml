@@ -11,11 +11,11 @@
     <item
         android:id="@+id/nav_diary"
         android:icon="@android:drawable/ic_menu_agenda"
-        android:title="Nhật ký" />
+        android:title="AI Chat" />
     <item
         android:id="@+id/nav_more"
         android:icon="@android:drawable/ic_menu_more"
-        android:title="Thêm" />
+        android:title="Nhật ký" />
     <item
         android:id="@+id/nav_settings"
         android:icon="@drawable/icon_menu_setting"

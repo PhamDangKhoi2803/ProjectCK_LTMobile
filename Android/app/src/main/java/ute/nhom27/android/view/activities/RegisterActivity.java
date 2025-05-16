@@ -44,7 +44,7 @@ public class RegisterActivity extends BaseActivity {
         etEmail = findViewById(R.id.etEmail);
         etPhone = findViewById(R.id.etPhone);
         etPassword = findViewById(R.id.etPassword);
-        spinnerTheme = findViewById(R.id.spinnerTheme);
+        spinnerTheme = findViewById(R.id.spinnerThemeRegister);
         btnRegister = findViewById(R.id.btnRegister);
         tvLogin = findViewById(R.id.tvLogin);
 

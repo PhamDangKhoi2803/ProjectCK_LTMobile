@@ -17,7 +17,7 @@ import ute.nhom27.android.utils.SharedPrefManager;
 
 public class ApiClient {
     //private static final String BASE_URL = "http://192.168.0.103:8081/";
-    private static final String BASE_URL = "http://10.0.2.2:8081/";
+    private static final String BASE_URL = "http://172.16.31.65:8081/";
     private static final String OPEN_AI_BASE_URL = "https://api.cohere.ai/";
     private static Retrofit noAuthRetrofit = null;
     private static Retrofit authRetrofit = null;

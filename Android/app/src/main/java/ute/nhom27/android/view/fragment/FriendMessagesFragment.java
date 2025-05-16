@@ -93,4 +93,8 @@ public class FriendMessagesFragment extends Fragment {
         super.onResume();
         fetchFriendMessages();
     }
+
+    public MessageListAdapter getAdapter() {
+        return adapter;
+    }
 }

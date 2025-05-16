@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -16,13 +18,15 @@ import com.google.android.material.tabs.TabLayoutMediator;
 
 import ute.nhom27.android.R;
 import ute.nhom27.android.adapter.ViewPagerAdapter;
-import ute.nhom27.android.view.activities.ChatActivity;
 
 public class MessageListFragment extends Fragment {
 
     private ViewPager2 viewPager;
     private TabLayout tabLayout;
     private ViewPagerAdapter viewPagerAdapter;
+    private SearchView searchView;
+    private FriendMessagesFragment friendMessagesFragment;
+    private GroupMessagesFragment groupMessagesFragment;
 
     public MessageListFragment() {
         // Required empty public constructor
@@ -40,15 +44,20 @@ public class MessageListFragment extends Fragment {
 
         viewPager = view.findViewById(R.id.view_pager);
         tabLayout = view.findViewById(R.id.tab_layout);
+        searchView = view.findViewById(R.id.search_view);
 
         setupViewPager();
         setupTabLayout();
+        setupSearchView();
     }
 
     private void setupViewPager() {
+        friendMessagesFragment = new FriendMessagesFragment();
+        groupMessagesFragment = new GroupMessagesFragment();
+
         viewPagerAdapter = new ViewPagerAdapter(this);
-        viewPagerAdapter.addFragment(new FriendMessagesFragment(), "Bạn bè");
-        viewPagerAdapter.addFragment(new GroupMessagesFragment(), "Nhóm");
+        viewPagerAdapter.addFragment(friendMessagesFragment, "Bạn bè");
+        viewPagerAdapter.addFragment(groupMessagesFragment, "Nhóm");
         viewPager.setAdapter(viewPagerAdapter);
     }
 
@@ -56,5 +65,30 @@ public class MessageListFragment extends Fragment {
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> tab.setText(viewPagerAdapter.getTitle(position))
         ).attach();
+    }
+
+    private void setupSearchView() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterMessages(newText);
+                return true;
+            }
+        });
+    }
+
+    private void filterMessages(String query) {
+        if (friendMessagesFragment != null && friendMessagesFragment.getAdapter() != null) {
+            friendMessagesFragment.getAdapter().getFilter().filter(query);
+        }
+
+        if (groupMessagesFragment != null && groupMessagesFragment.getAdapter() != null) {
+            groupMessagesFragment.getAdapter().getFilter().filter(query);
+        }
     }
 }

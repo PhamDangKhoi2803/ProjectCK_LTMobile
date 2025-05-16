@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -32,6 +33,14 @@ import ute.nhom27.android.network.OnMessageReceivedListener;
 import ute.nhom27.android.network.WebSocketClient;
 import ute.nhom27.android.utils.SharedPrefManager;
 import ute.nhom27.android.view.activities.ChatActivity;
+
+import android.app.Dialog;
+import android.view.Window;
+import androidx.appcompat.widget.SearchView;
+
+import com.google.android.material.button.MaterialButton;
+
+import ute.nhom27.android.adapter.FriendSuggestionAdapter;
 
 public class FriendListFragment extends Fragment implements OnMessageReceivedListener {
 
@@ -64,9 +73,97 @@ public class FriendListFragment extends Fragment implements OnMessageReceivedLis
         adapter.setWebSocketClient(webSocketClient);
         webSocketClient.connect();
 
+        ImageButton btnAddFriend = view.findViewById(R.id.btn_add_friend);
+        btnAddFriend.setOnClickListener(v -> showFriendSuggestionDialog());
+
         fetchFriends();
 
         return view;
+    }
+
+    private void showFriendSuggestionDialog() {
+        Dialog dialog = new Dialog(requireContext());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_friend_suggestion);
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+
+        RecyclerView recyclerViewSuggestions = dialog.findViewById(R.id.recycler_view_suggestions);
+        SearchView searchView = dialog.findViewById(R.id.search_view);
+
+        // Setup RecyclerView
+        recyclerViewSuggestions.setLayoutManager(new LinearLayoutManager(requireContext()));
+        List<UserResponse> suggestionList = new ArrayList<>();
+        FriendSuggestionAdapter suggestionAdapter = new FriendSuggestionAdapter(suggestionList, requireContext());
+        suggestionAdapter.setWebSocketClient(webSocketClient);
+        recyclerViewSuggestions.setAdapter(suggestionAdapter);
+
+        // Setup SearchView
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                suggestionAdapter.getFilter().filter(newText);
+                return true;
+            }
+        });
+
+        // Fetch non-friend users for suggestions
+        SharedPrefManager sharedPrefManager = new SharedPrefManager(requireContext());
+        Long userId = sharedPrefManager.getUser().getId();
+
+        apiService.getNonFriendUsers(userId).enqueue(new Callback<List<UserResponse>>() {
+            @Override
+            public void onResponse(Call<List<UserResponse>> call, Response<List<UserResponse>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    suggestionAdapter.updateData(response.body());
+
+                    // Also get sent requests to update UI for already sent requests
+                    apiService.getSentFriendRequests(userId).enqueue(new Callback<List<UserResponse>>() {
+                        @Override
+                        public void onResponse(Call<List<UserResponse>> call, Response<List<UserResponse>> response) {
+                            if (response.isSuccessful() && response.body() != null) {
+                                for (UserResponse user : suggestionList) {
+                                    for (UserResponse sentRequest : response.body()) {
+                                        if (user.getId().equals(sentRequest.getId())) {
+                                            int position = suggestionList.indexOf(user);
+                                            if (position != -1) {
+                                                View view = recyclerViewSuggestions.getChildAt(position);
+                                                if (view != null) {
+                                                    MaterialButton btnAddFriend = view.findViewById(R.id.btn_add_friend);
+                                                    MaterialButton btnWithdraw = view.findViewById(R.id.btn_withdraw);
+                                                    btnAddFriend.setVisibility(View.GONE);
+                                                    btnWithdraw.setVisibility(View.VISIBLE);
+                                                }
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<List<UserResponse>> call, Throwable t) {
+                            Log.e(TAG, "Error fetching sent requests: " + t.getMessage());
+                        }
+                    });
+                } else {
+                    Toast.makeText(getContext(), "Lỗi khi lấy danh sách gợi ý", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<UserResponse>> call, Throwable t) {
+                Log.e(TAG, "Error fetching non-friend users: " + t.getMessage());
+                Toast.makeText(getContext(), "Không thể kết nối server", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        dialog.show();
     }
 
     private void setupFriendListCallbacks() {
@@ -125,8 +222,17 @@ public class FriendListFragment extends Fragment implements OnMessageReceivedLis
                     if (friends == null) {
                         friends = new ArrayList<>();
                     }
-                    adapter = new FriendAdapter(friends, FriendAdapter.TYPE_FRIEND_LIST);
-                    // Set các listener
+
+                    // Thay vì tạo adapter mới, cập nhật adapter hiện tại
+                    if (adapter != null) {
+                        adapter.updateData(friends);
+                    } else {
+                        adapter = new FriendAdapter(friends, FriendAdapter.TYPE_FRIEND_LIST);
+                        setupFriendListCallbacks(); // Cài đặt lại callbacks nếu tạo adapter mới
+                        recyclerView.setAdapter(adapter);
+                    }
+
+                    // Thiết lập listener cho sự kiện nhắn tin
                     adapter.setOnMessageClickListener(friend -> {
                         Toast.makeText(getContext(), "Đã chọn: " + friend.getUsername(), Toast.LENGTH_SHORT).show();
                         // Log để kiểm tra giá trị
@@ -140,7 +246,11 @@ public class FriendListFragment extends Fragment implements OnMessageReceivedLis
                         intent.putExtra("receiverAvatar", friend.getAvatarURL());
                         startActivity(intent);
                     });
-                    recyclerView.setAdapter(adapter);
+
+                    // Đảm bảo adapter được thiết lập cho RecyclerView
+                    if (recyclerView.getAdapter() == null) {
+                        recyclerView.setAdapter(adapter);
+                    }
                 } else {
                     Toast.makeText(getContext(), "Lỗi khi lấy danh sách bạn bè", Toast.LENGTH_SHORT).show();
                 }
@@ -175,13 +285,7 @@ public class FriendListFragment extends Fragment implements OnMessageReceivedLis
 
     @Override
     public void onConnectionStatusChanged(boolean isConnected) {
-        if (getActivity() != null) {
-            getActivity().runOnUiThread(() -> {
-                Toast.makeText(getContext(), 
-                    isConnected ? "WebSocket Connected" : "WebSocket Disconnected", 
-                    Toast.LENGTH_SHORT).show();
-            });
-        }
+
     }
 
     @Override

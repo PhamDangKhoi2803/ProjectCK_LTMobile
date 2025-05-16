@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
+import java.util.ArrayList;
 import java.util.List;
 import ute.nhom27.android.R;
 import ute.nhom27.android.model.response.MessageListResponse;
@@ -17,13 +20,15 @@ import ute.nhom27.android.view.activities.ChatActivity;
 import ute.nhom27.android.view.activities.GroupChatActivity;
 import ute.nhom27.android.utils.DateTimeUtils;
 
-public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.ViewHolder> {
+public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.ViewHolder> implements Filterable {
 
     private List<MessageListResponse> messageList;
+    private List<MessageListResponse> messageListFull; // Danh sách đầy đủ để tìm kiếm
     private Context context;
 
     public MessageListAdapter(List<MessageListResponse> messageList, Context context) {
         this.messageList = messageList;
+        this.messageListFull = new ArrayList<>(messageList); // Tạo bản sao để tìm kiếm
         this.context = context;
     }
 
@@ -112,4 +117,39 @@ public class MessageListAdapter extends RecyclerView.Adapter<MessageListAdapter.
             tvUnreadCount = itemView.findViewById(R.id.tv_unread_count);
         }
     }
+
+    @Override
+    public Filter getFilter() {
+        return messageFilter;
+    }
+
+    private Filter messageFilter = new Filter() {
+        @Override
+        protected FilterResults performFiltering(CharSequence constraint) {
+            List<MessageListResponse> filteredList = new ArrayList<>();
+
+            if (constraint == null || constraint.length() == 0) {
+                filteredList.addAll(messageListFull);
+            } else {
+                String filterPattern = constraint.toString().toLowerCase().trim();
+
+                for (MessageListResponse message : messageListFull) {
+                    if (message.getName().toLowerCase().contains(filterPattern)) {
+                        filteredList.add(message);
+                    }
+                }
+            }
+
+            FilterResults results = new FilterResults();
+            results.values = filteredList;
+            return results;
+        }
+
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            messageList.clear();
+            messageList.addAll((List) results.values);
+            notifyDataSetChanged();
+        }
+    };
 }

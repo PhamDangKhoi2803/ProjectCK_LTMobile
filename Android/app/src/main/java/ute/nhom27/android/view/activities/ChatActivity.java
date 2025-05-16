@@ -395,12 +395,6 @@ public class ChatActivity extends BaseActivity implements OnMessageReceivedListe
 
     @Override
     public void onConnectionStatusChanged(boolean isConnected) {
-        this.isConnected = isConnected;
-        runOnUiThread(() -> {
-            if (!isConnected) {
-                Toast.makeText(this, "Mất kết nối với server", Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void sendMessage() {

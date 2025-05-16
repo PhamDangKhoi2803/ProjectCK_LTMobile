@@ -23,13 +23,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton;
+import com.zegocloud.uikit.service.defines.ZegoUIKitUser;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -58,7 +62,7 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
 
     private RecyclerView rvMessages;
     private EditText etMessage;
-    private ImageButton btnSend, btnAttachment, btnMore;
+    private ImageButton btnSend, btnAttachment;
     private ImageView ivGroupAvatar;
     private TextView tvGroupName, tvMemberCount;
     private LinearLayout layoutAttachment;
@@ -68,6 +72,8 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
     private ImageButton btnCancelPreview;
     private Uri selectedImageUri;
     private Bitmap capturedImage;
+
+    private ZegoSendCallInvitationButton btnVoiceCall, btnVideoCall;
 
     private GroupChatAdapter chatAdapter;
     private List<GroupMessageResponse> messageList;
@@ -120,7 +126,6 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
         etMessage = findViewById(R.id.etMessage);
         btnSend = findViewById(R.id.btnSend);
         btnAttachment = findViewById(R.id.btnAttachment);
-        btnMore = findViewById(R.id.btnMore);
         ivGroupAvatar = findViewById(R.id.ivGroupAvatar);
         tvGroupName = findViewById(R.id.tvGroupName);
         tvMemberCount = findViewById(R.id.tvMemberCount);
@@ -128,6 +133,8 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
         layoutPreview = findViewById(R.id.layoutPreview);
         ivPreview = findViewById(R.id.ivPreview);
         btnCancelPreview = findViewById(R.id.btnCancelPreview);
+        btnVoiceCall = findViewById(R.id.btnVoiceCall);
+        btnVideoCall = findViewById(R.id.btnVideoCall);
 
         // Set group info
         tvGroupName.setText(groupName);
@@ -345,7 +352,20 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
             @Override
             public void onResponse(Call<List<GroupMemberResponse>> call, Response<List<GroupMemberResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
+                    List<GroupMemberResponse> members = response.body();
                     int memberCount = response.body().size();
+                    List<ZegoUIKitUser> invitees = members.stream()
+                            .filter(member -> !member.getName().equals(prefManager.getUser().getUsername()))
+                            .map(member -> new ZegoUIKitUser(member.getName()))
+                            .collect(Collectors.toList());
+
+                    btnVoiceCall.setIsVideoCall(false);
+                    btnVoiceCall.setResourceID("zego_uikit_call");
+                    btnVoiceCall.setInvitees(invitees);
+
+                    btnVideoCall.setIsVideoCall(true);
+                    btnVideoCall.setResourceID("zego_uikit_call");
+                    btnVideoCall.setInvitees(invitees);
                     tvMemberCount.setText(memberCount + " thành viên");
                 }
             }
@@ -355,38 +375,6 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
                 Log.e("GroupChat", "Error loading member count", t);
                 Toast.makeText(GroupChatActivity.this,
                         "Không thể tải thông tin thành viên",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void loadGroupMembers(RecyclerView recyclerView) {
-        apiService.getGroupMembers(groupId).enqueue(new Callback<List<GroupMemberResponse>>() {
-            @Override
-            public void onResponse(Call<List<GroupMemberResponse>> call, Response<List<GroupMemberResponse>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<GroupMemberResponse> members = response.body();
-
-                    // Cập nhật số lượng thành viên
-                    tvMemberCount.setText(members.size() + " thành viên");
-
-                    // Thiết lập RecyclerView cho danh sách thành viên
-                    recyclerView.setLayoutManager(new LinearLayoutManager(GroupChatActivity.this));
-                    GroupMemberAdapter memberAdapter = new GroupMemberAdapter(members);
-                    recyclerView.setAdapter(memberAdapter);
-                } else {
-                    Log.e("GroupChat", "Error loading members: " + response.code());
-                    Toast.makeText(GroupChatActivity.this,
-                            "Không thể tải danh sách thành viên. Mã lỗi: " + response.code(),
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<List<GroupMemberResponse>> call, Throwable t) {
-                Log.e("GroupChat", "Error loading members", t);
-                Toast.makeText(GroupChatActivity.this,
-                        "Không thể tải danh sách thành viên. Vui lòng kiểm tra kết nối mạng",
                         Toast.LENGTH_SHORT).show();
             }
         });
@@ -631,12 +619,7 @@ public class GroupChatActivity extends BaseActivity implements OnMessageReceived
 
     @Override
     public void onConnectionStatusChanged(boolean isConnected) {
-        this.isConnected = isConnected;
-        runOnUiThread(() -> {
-            if (!isConnected) {
-                Toast.makeText(this, "Mất kết nối với server", Toast.LENGTH_SHORT).show();
-            }
-        });
+
     }
 
     @Override

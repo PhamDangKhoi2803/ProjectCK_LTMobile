@@ -125,8 +125,9 @@ public class FriendAdapter extends RecyclerView.Adapter<FriendAdapter.FriendView
         return userList != null ? userList.size() : 0;
     }
 
-    public void updateData(List<UserResponse> newList) {
-        this.userList = newList;
+    public void updateData(List<UserResponse> newData) {
+        this.userList.clear();
+        this.userList.addAll(newData);
         notifyDataSetChanged();
     }
 

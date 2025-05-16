@@ -26,4 +26,6 @@ public interface IMessageService {
     List<MessageListDTO> getFriendLastMessages(Long userId);
 
     void savePrivateMessage(ChatMessage message);
+
+    boolean deleteMessagesBetweenUsers(Long userId1, Long userId2);
 }

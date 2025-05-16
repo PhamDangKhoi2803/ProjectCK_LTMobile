@@ -107,4 +107,8 @@ public class GroupMessagesFragment extends Fragment {
         super.onResume();
         fetchGroupMessages();
     }
+
+    public MessageListAdapter getAdapter() {
+        return adapter;
+    }
 }

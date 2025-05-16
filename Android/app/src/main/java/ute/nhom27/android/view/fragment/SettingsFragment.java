@@ -33,6 +33,7 @@ import com.bumptech.glide.request.target.Target;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import okhttp3.MediaType;
@@ -184,19 +185,17 @@ public class SettingsFragment extends Fragment {
         User currentUser = sharedPrefManager.getUser();
         if (currentUser == null) return;
 
-        String token = "Bearer " + sharedPrefManager.getToken();
-        apiService.getFriendsCount(currentUser.getId(), token).enqueue(new Callback<Integer>() {
+        apiService.getFriends(currentUser.getId()).enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<Integer> call, Response<Integer> response) {
+            public void onResponse(Call<List<UserResponse>> call, Response<List<UserResponse>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    tvFriendsCount.setText("Số bạn bè: " + response.body());
-                } else {
-                    Toast.makeText(getContext(), "Không thể tải số lượng bạn bè", Toast.LENGTH_SHORT).show();
+                    int friendCount = response.body().size();
+                    tvFriendsCount.setText("Số bạn bè: " + friendCount);
                 }
             }
 
             @Override
-            public void onFailure(Call<Integer> call, Throwable t) {
+            public void onFailure(Call<List<UserResponse>> call, Throwable t) {
                 Toast.makeText(getContext(), "Lỗi kết nối", Toast.LENGTH_SHORT).show();
             }
         });

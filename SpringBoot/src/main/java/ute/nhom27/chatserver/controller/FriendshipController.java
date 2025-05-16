@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import ute.nhom27.chatserver.dto.UserDTO;
 import ute.nhom27.chatserver.entity.User;
 import ute.nhom27.chatserver.service.IFriendshipService;
+import ute.nhom27.chatserver.service.IMessageService;
 import ute.nhom27.chatserver.service.IUserService;
 
 import java.util.List;
@@ -25,6 +26,9 @@ public class FriendshipController {
 
     @Autowired
     private NotificationController notificationController;
+
+    @Autowired
+    private IMessageService messageService;
 
     // Gửi lời mời kết bạn
     @PostMapping("/request")
@@ -138,6 +142,15 @@ public class FriendshipController {
             return ResponseEntity.badRequest().body("Người dùng không tồn tại");
         }
 
+        // Xóa tin nhắn giữa hai user trước khi xóa mối quan hệ bạn bè
+        log.info("Xóa tin nhắn giữa userId: {} và friendId: {}", userId, friendId);
+        boolean messagesDeleted = messageService.deleteMessagesBetweenUsers(userId, friendId);
+
+        if (!messagesDeleted) {
+            log.warn("Không thể xóa tin nhắn giữa userId: {} và friendId: {}", userId, friendId);
+            // Có thể tiếp tục hoặc trả về lỗi tùy thuộc vào yêu cầu
+        }
+
         boolean success = friendshipService.unfriend(userId, friendId);
         if (!success) {
             return ResponseEntity.badRequest().body("Không phải là bạn bè hoặc đã xử lý rồi");
@@ -148,6 +161,6 @@ public class FriendshipController {
                 .map(User::getUsername).orElse("Unknown") + " đã hủy kết bạn với bạn";
         notificationController.sendNotification(friendId, userId, content, "UNFRIEND");
 
-        return ResponseEntity.ok("Đã hủy kết bạn thành công");
+        return ResponseEntity.ok("Đã hủy kết bạn thành công và xóa tin nhắn giữa hai người dùng");
     }
 }
